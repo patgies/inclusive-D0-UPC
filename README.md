@@ -3,9 +3,9 @@
 
 This code provides the cross section for inclusive D0 photoproduction in ultraperipheral collisions. 
 
-Based on  [](https://arxiv.org/abs/2503.16108) 
+Based on [2503.16108](https://arxiv.org/abs/2503.16108) 
 
-Dipoles amplitudes from [](https://github.com/hejajama/rcbkdipole)
+Dipoles amplitudes from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole) 
 ***
 
 
