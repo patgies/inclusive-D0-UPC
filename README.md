@@ -1,4 +1,4 @@
-# Inclusive D0
+# Inclusive D0 photoproduction
 
 
 This code provides the cross section for inclusive D0 photoproduction in ultraperipheral collisions. 
@@ -8,18 +8,17 @@ Based on P.Gimeno-Estivill, T.Lappi, H.Mäntysaari, [2503.16108](https://arxiv.o
 Dipoles amplitudes from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole) 
 ***
 
-
 ## Building
 Requires
- - Cmake
- - GSL
+- Cmake
+- GSL
 
 How to compile:
 ```
-   mkdir build
-   cd build
-   cmake ..
-   make
+mkdir build
+cd build
+cmake ..
+make
 ```
 This generates a library build/lib/libamplitude.a that you can link in your own program.
 
