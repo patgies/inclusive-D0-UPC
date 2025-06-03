@@ -16,16 +16,15 @@ Based on P.Gimeno-Estivill, T.Lappi, H.Mäntysaari, [2503.16108](https://arxiv.o
 
 
 ## Input
-- Dipole amplitude in momentum space `dipole -> S_k( l, par -> xbj, FUNDAMENTAL, 1.0);` in `function.cpp`: describes the scattering of the charm quark pair with lead nucleus. 
-These dipole amplitudes are evolved using the Balitsky-Kovchegov equation from initial Bjorken x `xbj=0.01` to `xbj = (mt / ss) * exp(-(y))` where 
-where `ss` is the collision energy (GeV), `mt` is the invariant mass (GeV) and `y` the rapidity of the meson. This evolution is done for each impact parameter independently.
-In `main.cpp`: `AmplitudeLib dipole("./data/Pb/mve/glauber_mve_X");` where X is the impact parameter in GeV^(-1) 
-Dipoles from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole).
+- User needs to specify the impact parameter X (GeV^(-1)) in `main.cpp`: `AmplitudeLib dipole("./data/Pb/mve/glauber_mve_X");`. 
+The dipole amplitudes in momentum space `dipole -> S_k( l, par -> xbj, FUNDAMENTAL, 1.0);` in `function.cpp` are evolved for each impact parameter X independently using the Balitsky-Kovchegov equation from initial Bjorken x `xbj=0.01` to `xbj = (mt / ss) * exp(-(y))` where 
+where `ss` is the collision energy (GeV), `mt` is the invariant mass (GeV) and `y` the rapidity of the meson.
+Dipole parametrization from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole).
 
 ## Output
 
-- Differential D0 cross section in momentum and rapidity of the meson and impact parameter. The user needs to integrate over the different impact parameters: see example code
-in -----
+- D0 cross section differential in momentum, rapidity and impact parameter. The user needs to integrate over the 2D impact parameter: see example code
+`b_integral.ipynb`
 
 ## Building
 Requires
