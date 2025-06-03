@@ -22,7 +22,7 @@ where `ss` is the collision energy [GeV], `mt` is the invariant mass [GeV] and `
 
 Dipole parametrization MVe from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole).
 
-- The user needs to specify the momentum of the produced D⁰ meson: see **Building** section.
+- The user needs to specify the momentum `kD` of the produced D⁰ meson: see **Building** section.
 
 ## Output
 - Differential D0 cross section in momentum `kD`, rapidity `y` and impact parameter `b`: ```dsigma/d^2kD dy d^2b [GeV^(-2)]```.
