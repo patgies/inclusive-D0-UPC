@@ -12,16 +12,20 @@ Based on P.Gimeno-Estivill, T.Lappi, H.Mäntysaari, [2503.16108](https://arxiv.o
 - function.cpp : defines the integrand (photon flux, electromagnetic dissociation projectile (0n), photon splitting+dipole scattering)
 - Integral_parton.cpp : computes the partonic cross section for charm photoproduction using MonteCarlo method Vegas.
 - integral_D0.cpp : adds the partonic cross section, defines the fragmentation function and computes the differential cross section for D0 photoproduction
-- main.cpp: defines the parameters and calls integral_D0.cpp
+- main.cpp: defines the parameters (charm mass, rapidity, collision energy...) and calls integral_D0.cpp
 
 
 ## Input
--  `AmplitudeLib dipole("./data/Pb/mve/glauber_mve_2");`
-Dipole amplitude in momentum space `dipole -> S_k( l, par -> xbj, FUNDAMENTAL, 1.0);` describe the scattering of the charm quark pair with lead nucleus.
-From [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole). 
+- Dipole amplitude in momentum space `dipole -> S_k( l, par -> xbj, FUNDAMENTAL, 1.0);` in `function.cpp`: describes the scattering of the charm quark pair with lead nucleus. 
 These dipole amplitudes are evolved using the Balitsky-Kovchegov equation from initial Bjorken x `xbj=0.01` to `xbj = (mt / ss) * exp(-(y))` where 
-where `ss` is the collision energy, `mt` is the invariant mass and `y` the rapidity of the meson. 
+where `ss` is the collision energy (GeV), `mt` is the invariant mass (GeV) and `y` the rapidity of the meson. This evolution is done for each impact parameter independently.
+In `main.cpp`: `AmplitudeLib dipole("./data/Pb/mve/glauber_mve_X");` where X is the impact parameter in GeV^(-1) 
+Dipoles from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole).
 
+## Output
+
+- Differential D0 cross section in momentum and rapidity of the meson and impact parameter. The user needs to integrate over the different impact parameters: see example code
+in -----
 
 ## Building
 Requires
@@ -39,7 +43,7 @@ Execute:
 
 `./build/bin/dipole <kd>`
 
-Where `<kd>` is the momentum of the produced D⁰ meson, passed as a command-line argument 
+Where `<kd>` is the momentum of the produced D⁰ meson, passed as a command-line argument.
 
 
 ### Questions and comments
