@@ -9,27 +9,36 @@ Based on P.Gimeno-Estivill, T.Lappi, H.Mäntysaari, [2503.16108](https://arxiv.o
 ***
 ## Files
 
-- function.cpp : defines the integrand (photon flux, electromagnetic dissociation projectile (0n), photon splitting+dipole scattering)
+- function.cpp : defines the integrand (photon flux, electromagnetic dissociation projectile (0n), photon splitting+dipole scattering).
 - Integral_parton.cpp : computes the partonic cross section for charm photoproduction using MonteCarlo method Vegas.
-- integral_D0.cpp : adds the partonic cross section, defines the fragmentation function and computes the differential cross section for D0 photoproduction
-- main.cpp: defines the parameters (charm mass, rapidity, collision energy...) and calls integral_D0.cpp
-
+- integral_D0.cpp : adds the partonic cross section, defines the fragmentation function and computes the differential cross section for D0 photoproduction.
+- main.cpp: defines the parameters (charm mass, rapidity, collision energy...) and calls integral_D0.cpp.
 
 ## Input
-- User needs to specify the impact parameter X (GeV^(-1)) in `main.cpp`: `AmplitudeLib dipole("./data/Pb/mve/glauber_mve_X");`. 
-The dipole amplitudes in momentum space `dipole -> S_k( l, par -> xbj, FUNDAMENTAL, 1.0);` in `function.cpp` are evolved for each impact parameter X independently using the Balitsky-Kovchegov equation from initial Bjorken x `xbj=0.01` to `xbj = (mt / ss) * exp(-(y))` where 
+- The user needs to specify the impact parameter X [GeV^-1] in `main.cpp`: `AmplitudeLib dipole("./data/Pb/mve/glauber_mve_X");`. 
+
+The dipole amplitudes in momentum space `dipole -> S_k( l, par -> xbj, FUNDAMENTAL, 1.0);` in `function.cpp` are evolved for each impact parameter X independently using the BK equation from Bjorken  `xbj=0.01` to `xbj = (mt / ss) * exp(-(y))` where 
 where `ss` is the collision energy (GeV), `mt` is the invariant mass (GeV) and `y` the rapidity of the meson.
+
 Dipole parametrization from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole).
+
+- The user needs to specify the momentum of the produced D0 meson: see _Building_ section.
 
 ## Output
 
-- D0 cross section differential in momentum, rapidity and impact parameter. The user needs to integrate over the 2D impact parameter: see example code
-`b_integral.ipynb`
+- D0 cross section differential in momentum k, rapidity y and impact parameter b,
+`dsigma/d^2k dy db` [GeV^(-2)]
+
+Note: this code uses GeV^n units.
+
+The user needs to integrate over the impact parameter `b`: see example code `b_integral.ipynb`.
+
+Finally, add the corresponding factors to obtain the differential cross section: see example code `cross_section.ipynb`.
 
 ## Building
 Requires
 - CMake
-- GSL
+- GSL (GNU Scientific Library)
 
 How to compile:
 ```
@@ -42,8 +51,8 @@ Execute:
 
 `./build/bin/dipole <kd>`
 
-Where `<kd>` is the momentum of the produced D⁰ meson, passed as a command-line argument.
+Where `<kd>` is the momentum [GeV] of the produced D⁰ meson, passed as a command-line argument.
 
 
 ### Questions and comments
-Please send an email to patricia.p.gimenoestivill@jyu.fi
+Please send an email to patricia.p.gimenoestivill@jyu.fi 
