@@ -37,9 +37,9 @@ make
 ```
 Execute:
 
-`./build/bin/dipole ${kd}`
+`./build/bin/dipole <kd>`
 
-where kd is the momentum of the produced D0 meson. 
+Where `<kd>` is the momentum of the produced D⁰ meson, passed as a command-line argument 
 
 
 ### Questions and comments
