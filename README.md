@@ -25,7 +25,7 @@ Dipole parametrization from [https://github.com/hejajama/rcbkdipole](https://git
 - The user needs to specify the momentum of the produced D⁰ meson: see _Building_ section.
 
 ## Output
-- Differential D0 cross section in momentum `kD`, rapidity `y` and impact parameter `b`: ```dsigma/d^2kD dy d^2b [GeV^(-2)]```
+- Differential D0 cross section in momentum `kD`, rapidity `y` and impact parameter `b`: ```dsigma/d^2kD dy d^2b [GeV^(-2)]```.
 
 The user needs to integrate over the impact parameter `b`: see example code `b_integral.ipynb`.
 
@@ -53,4 +53,4 @@ Where `<kd>` is the momentum [GeV] of the produced D⁰ meson, passed as a comma
 
 
 ### Questions and comments
-Please send an email to patricia.p.gimenoestivill@jyu.fi 
+Please send an email to patricia.p.gimenoestivill@jyu.fi .
