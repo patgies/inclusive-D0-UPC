@@ -18,14 +18,13 @@ Based on P.Gimeno-Estivill, T.Lappi, H.Mäntysaari, [2503.16108](https://arxiv.o
 - The user needs to specify the impact parameter X [GeV^-1] in `main.cpp`: `AmplitudeLib dipole("./data/Pb/mve/glauber_mve_X");`. 
 
 The dipole amplitudes in momentum space `dipole -> S_k( l, par -> xbj, FUNDAMENTAL, 1.0);` in `function.cpp` are evolved for each impact parameter X independently using the BK equation from Bjorken  `xbj=0.01` to `xbj = (mt / ss) * exp(-(y))` where 
-where `ss` is the collision energy (GeV), `mt` is the invariant mass (GeV) and `y` the rapidity of the meson.
+where `ss` is the collision energy [GeV], `mt` is the invariant mass [GeV] and `y` the rapidity of the meson.
 
 Dipole parametrization from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole).
 
 - The user needs to specify the momentum of the produced D⁰ meson: see _Building_ section.
 
 ## Output
-
 - Differential D0 cross section in momentum `kD`, rapidity `y` and impact parameter `b`: 
 
 ```dsigma/d^2kD dy d^2b [GeV^(-2)]```
