@@ -20,7 +20,7 @@ Based on P.Gimeno-Estivill, T.Lappi, H.Mäntysaari, [2503.16108](https://arxiv.o
 The dipole amplitudes in momentum space `dipole -> S_k( l, par -> xbj, FUNDAMENTAL, 1.0);` in `function.cpp` are evolved for each impact parameter X independently using the BK equation from Bjorken  `xbj=0.01` to `xbj = (mt / ss) * exp(-(y))` where 
 where `ss` is the collision energy [GeV], `mt` is the invariant mass [GeV] and `y` the rapidity of the meson.
 
-Dipole parametrization from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole).
+Dipole parametrization MVe from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole).
 
 - The user needs to specify the momentum of the produced D⁰ meson: see _Building_ section.
 
