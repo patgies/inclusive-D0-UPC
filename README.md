@@ -26,14 +26,15 @@ Dipole parametrization from [https://github.com/hejajama/rcbkdipole](https://git
 
 ## Output
 
-- D0 cross section differential in momentum k, rapidity y and impact parameter b,
-`dsigma/d^2k dy db` [GeV^(-2)]
+- Differential D0 cross section in momentum `kD`, rapidity `y` and impact parameter `b`: 
 
-Note: this code uses GeV^n units.
+`dsigma/d^2kD dy d^2b` [GeV^(-2)]
 
 The user needs to integrate over the impact parameter `b`: see example code `b_integral.ipynb`.
 
-Finally, add the corresponding factors to obtain the differential cross section: see example code `cross_section.ipynb`.
+Finally, add the corresponding factors to obtain the differential cross section `dsigma/dkD dy` [GeV^(-3)]: see example code `cross_section.ipynb`.
+
+Note: this code uses GeV^n units.
 
 ## Building
 Requires
