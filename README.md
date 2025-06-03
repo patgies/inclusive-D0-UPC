@@ -1,7 +1,7 @@
 # Inclusive D0 photoproduction
 
 
-This code provides the differential cross section for inclusive D0 photoproduction in ultraperipheral collisions in the "Xn0n" event.
+This code provides the differential cross section for inclusive D⁰ photoproduction in ultraperipheral collisions in the "Xn0n" event.
 
 Based on P.Gimeno-Estivill, T.Lappi, H.Mäntysaari, [2503.16108](https://arxiv.org/abs/2503.16108) 
 
@@ -22,17 +22,17 @@ where `ss` is the collision energy (GeV), `mt` is the invariant mass (GeV) and `
 
 Dipole parametrization from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole).
 
-- The user needs to specify the momentum of the produced D0 meson: see _Building_ section.
+- The user needs to specify the momentum of the produced D⁰ meson: see _Building_ section.
 
 ## Output
 
 - Differential D0 cross section in momentum `kD`, rapidity `y` and impact parameter `b`: 
 
-`dsigma/d^2kD dy d^2b` [GeV^(-2)]
+```dsigma/d^2kD dy d^2b [GeV^(-2)]```
 
 The user needs to integrate over the impact parameter `b`: see example code `b_integral.ipynb`.
 
-Finally, add the corresponding factors to obtain the differential cross section `dsigma/dkD dy` [GeV^(-3)]: see example code `cross_section.ipynb`.
+Finally, add the corresponding factors to obtain the differential cross section ```dsigma/dkD dy [GeV^(-3)]```: see example code `cross_section.ipynb`.
 
 Note: this code uses GeV^n units.
 
