@@ -51,6 +51,3 @@ Execute:
 
 Where `<kd>` is the momentum [GeV] of the produced D⁰ meson, passed as a command-line argument.
 
-
-### Questions and comments
-Please send an email to patricia.p.gimenoestivill@jyu.fi .
