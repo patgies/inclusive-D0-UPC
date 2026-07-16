@@ -1,7 +1,8 @@
 # Inclusive D0 photoproduction
 
 
-This code provides the differential cross section for inclusive D⁰ photoproduction in ultraperipheral collisions in the "Xn0n" event.
+This code provides the differential cross section for inclusive D⁰ photoproduction in ultraperipheral collisions in the Color Glass Condensate formalism. 
+The user can select the UPC event: {"Xn0n", "An0n", "AnAn"} and fragmentation function: {KniehlKramer, LHAPDF, BCFY}.
 
 Based on P.Gimeno-Estivill, T.Lappi, H.Mäntysaari, [2503.16108](https://arxiv.org/abs/2503.16108) 
 
