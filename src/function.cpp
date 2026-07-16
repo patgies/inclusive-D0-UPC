@@ -1,7 +1,6 @@
 #include "def.hpp"
 #include "tools.hpp"
 #include "amplitudelib.hpp"
-#include "fourier.h"
 #include <cmath>
 #include <gsl/gsl_sf_result.h>
 #include <gsl/gsl_sf_bessel.h>
@@ -12,52 +11,25 @@ using namespace std;
 
 
 
-double besselFunction(double nu, double x)
-{   
-    gsl_sf_result result;
+// Hard amplitude in momentum space 
+// pc  = charm quark transverse momentum (= pD0/zh)
+// kp  = charm quark plus-momentum = (mT/sqrt(2))*exp(y)
+// l   = gluon transverse momentum magnitude
+// phi = angle between pc and l vectors
+// qp  = photon plus-momentum
+static double F_hard(double m, double kp, double pc, double l, double phi, double qp)
+{
+    double z   = kp / qp;
+    double abr = pc*pc + l*l - 2.0*pc*l*cos(phi);  // |pc - l|^2
 
-    int gsl_status1 = gsl_sf_bessel_Knu_e(nu, x, &result);
-    
-    if (gsl_status1 != GSL_SUCCESS) 
-    {
-        return 0.0; 
-    }
-  
-    return result.val;
+    double den1 = (m*m + abr) * (m*m + abr);
+    double den2 = (m*m + pc*pc) * (m*m + pc*pc);
+    double den3 = (m*m + abr) * (m*m + pc*pc);
 
-}
+    double par1 = 1.0/den1 + 1.0/den2 - 2.0/den3;
+    double par2 = abr/den1 + pc*pc/den2 - 2.0*(pc*pc - l*pc*cos(phi))/den3;
 
-// Function to be integrated without the dipole
-
-double F(double m, double kp, double k, double l, double x, double qp)
-{ 
- 
-    double z = kp / qp;  
-    
-    double abr = SQR(k) + SQR(l) - 2.*k*l*cos(x);
-
-    //squares  
-    double num1 = abr;  
-    double num2 = SQR(k);
-    double den1 = SQR(m)*SQR(m) + 2.*SQR(m)*abr + SQR(abr) ;
-    double den2 = SQR(m)*SQR(m) + SQR(k)*SQR(k) + 2.*SQR(m)*SQR(k) ;
-    
-    
-    //cross term
-     double num3 = 2*(SQR(k)-l*k*cos(x));
-     double den3 = SQR(m)*SQR(m) + SQR(m)*SQR(k) + SQR(m)*abr + abr*SQR(k);
-     
-     //first parenthesis
-     double par1 = (1. / den1)+ (1./den2)- (2./den3);
-     
-     //second parenthesis 
-     double par2 = (num1 / den1)+ (num2/den2)- (num3/den3);
-     
-     //function
-     double fun =  (2*z*SQR(m) * par1) + (2*z*(SQR(z) + SQR(1.-z))*par2);  
-     
-     
-     return l*fun;  //l from the 2D integral
+    return l * (2.0*z*m*m*par1 + 2.0*z*(z*z + (1.0-z)*(1.0-z))*par2);
 }
 
 
