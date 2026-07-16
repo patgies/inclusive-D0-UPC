@@ -1,6 +1,7 @@
 #include "def.hpp"
 #include "amplitudelib.hpp"
 #include "fragmentation.hpp"
+#include "gamma_aa.hpp"
 #include "interpolation.hpp"
 #include <cmath>
 #include <gsl/gsl_monte_vegas.h>
@@ -67,10 +68,20 @@ double integrand_inclusive(double* vec, size_t /*dim*/, void* p)
     // Inclusive hard factor 
     double fhard = F_hard(par->m, pp_zh, pc, l, phi, qp);
 
-    // Fragmentation function ( KK or BCFY)
-    double D_frag = par->use_kniehl_kramer
-                    ? D_kniehl_kramer(zh, par->N_kk, par->eps_kk)
-                    : Dc_to_D0(zh, par->r);
+    // Fragmentation function (BCFY, Kniehl & Kramer, or LHAPDF)
+    double D_frag;
+    switch (par->frag_type) {
+        case FragmentationType::KniehlKramer:
+            D_frag = D_kniehl_kramer(zh, par->N_kk, par->eps_kk);
+            break;
+        case FragmentationType::LHAPDF:
+            D_frag = D_lhapdf(zh, par->lhapdf_setname, par->lhapdf_pid);
+            break;
+        case FragmentationType::BCFY:
+        default:
+            D_frag = Dc_to_D0(zh, par->r);
+            break;
+    }
     double frag_weight = D_frag / (zh * zh);
 
     return jac_qp * frag_weight * flux * Sk * fhard;

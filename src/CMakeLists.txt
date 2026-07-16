@@ -9,13 +9,12 @@ add_library(
 )
 
 add_executable(
-        dipole
-        function.cpp
-        integral_parton.cpp
-        integral_D0.cpp
-        main.cpp
-        fourier.c
-        #libFcompat.c
+    dipole
+    inclusive_spectrum.cpp
+    main.cpp
+	gamma_aa.cpp
+    fourier.c
+	fragmentation.cpp
 )	
 
 target_link_libraries(
@@ -24,4 +23,6 @@ target_link_libraries(
 	amplitude
 	GSL::gsl
 	GSL::gslcblas
+	-L${LHAPDF_LIBRARY_DIR}
+	-lLHAPDF
 )

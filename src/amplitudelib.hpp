@@ -9,6 +9,7 @@
 #include "interpolation.hpp"
 #include <vector>
 #include <string>
+#include <memory>
 
  enum Representation
     {

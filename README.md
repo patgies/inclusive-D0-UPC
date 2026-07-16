@@ -57,7 +57,7 @@ The built executable takes a momentum argument, a dipole amplitude file, and an 
 ```
 ./build/bin/dipole <pD0> <dipole_file> [y]
 ```
-If `y` is omitted, it prints `y  dsigma_dy` for every rapidity in the hardcoded list `{0.0, 0.5, ..., 4.0}`; if given, only that one rapidity is computed.
+If `y` is omitted, it prints `y  dsigma_dydpt` for every rapidity in the hardcoded list `{0.0, 0.5, ..., 4.0}`; if given, only that one rapidity is computed.
 
 Examples:
 ```
@@ -66,9 +66,9 @@ Examples:
 ```
 
 ### Local batch wrapper
-`local.sh` is a quick local test script: it fixes a single dipole file and rapidity (edit `DIPOLE_FILE`/`Y` at the top of the script) and sweeps `pD0` from 0.1 to 12.0 in steps of 0.2, writing `pD0  dsigma_dy` pairs to `out/spectrum_y<Y>.dat`:
+`run_local.sh` is a quick local test script: it fixes a single dipole file and rapidity (edit `DIPOLE_FILE`/`Y` at the top of the script) and sweeps `pD0` from 0.1 to 12.0 in steps of 0.2, writing `pD0  dsigma_dydpt` pairs to `out/spectrum_y<Y>.dat`:
 ```
-./local.sh
+./run_local.sh
 ```
 
 ## SLURM / cluster execution

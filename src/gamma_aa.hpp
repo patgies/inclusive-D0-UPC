@@ -81,5 +81,9 @@ void load_data_and_initialize(const std::string& filename);
 // std::runtime_error if called before load_data_and_initialize().
 
 GammaAA& gamma_aa();
- 
+
+// Photon flux at impact parameter b for photon plus-momentum qp.
+// p must point to a parameters struct (see def.hpp).
+double photon_flux(double b, double qp, void* p);
+
 #endif
