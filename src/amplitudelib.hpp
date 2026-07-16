@@ -220,7 +220,18 @@ class AmplitudeLib
          */
         void SetInterpolationMethod(AMPLITUDE_INTERPOLATION_METHOD m) { interpolation_method = m;}
 
-
+        
+        /**
+         * Build a precomputed interpolator for S_k as a function of transverse momentum.
+         *
+         * This is helpful for inclusive calculations where the same S_k table is reused
+         * many times during integration. The returned interpolator is initialized and ready
+         * to evaluate at arbitrary l values.
+         */
+        std::unique_ptr<Interpolator> MakeSkInterpolator(double xbj, double lmax,
+                                                         int n_grid = 200,
+                                                         Representation rep = FUNDAMENTAL,
+                                                         double pow = 1.0);
         /**
          * Scattering matrix in momentum space
          *

@@ -587,6 +587,34 @@ struct N_k_helper
     AmplitudeLib* N;
 };
 double S_k_helperf(double r, void* p);
+
+// Build a 200 points grid and evaluate S_k on it. 
+// Create an interpolator and return it
+
+std::unique_ptr<Interpolator> AmplitudeLib::MakeSkInterpolator(double xbj, double lmax,
+                                                               int n_grid,
+                                                               Representation rep,
+                                                               double pow)
+{
+    if (n_grid < 2) {
+        n_grid = 2;
+    }
+
+    InitializeInterpolation(xbj);
+
+    std::vector<double> lgrid(n_grid), sk_vals(n_grid);
+    for (int i = 0; i < n_grid; ++i) {
+        lgrid[i] = lmax * i / (n_grid - 1.0);
+        sk_vals[i] = (lgrid[i] > 0.0)
+                     ? S_k(lgrid[i], xbj, rep, pow)
+                     : 0.0;
+    }
+
+    auto interp = std::make_unique<Interpolator>(lgrid, sk_vals);
+    interp->Initialize();
+    return interp;
+}
+
 double AmplitudeLib::S_k(double kt, double xbj, Representation rep, double pow)
 {
 
