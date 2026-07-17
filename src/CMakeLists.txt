@@ -23,6 +23,4 @@ target_link_libraries(
 	amplitude
 	GSL::gsl
 	GSL::gslcblas
-	-L${LHAPDF_LIBRARY_DIR}
-	-lLHAPDF
 )

@@ -68,14 +68,11 @@ double integrand_inclusive(double* vec, size_t /*dim*/, void* p)
     // Inclusive hard factor 
     double fhard = F_hard(par->m, pp_zh, pc, l, phi, qp);
 
-    // Fragmentation function (BCFY, Kniehl & Kramer, or LHAPDF)
+    // Fragmentation function (BCFY or Kniehl & Kramer)
     double D_frag;
     switch (par->frag_type) {
         case FragmentationType::KniehlKramer:
             D_frag = D_kniehl_kramer(zh, par->N_kk, par->eps_kk);
-            break;
-        case FragmentationType::LHAPDF:
-            D_frag = D_lhapdf(zh, par->lhapdf_setname, par->lhapdf_pid);
             break;
         case FragmentationType::BCFY:
         default:

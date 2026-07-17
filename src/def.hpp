@@ -5,7 +5,7 @@
 #include "amplitudelib.hpp"
 #include "interpolation.hpp"
 
-enum class FragmentationType { BCFY, KniehlKramer, LHAPDF };
+enum class FragmentationType { BCFY, KniehlKramer };
 
 struct parameters
 {
@@ -23,9 +23,6 @@ struct parameters
     double r;            // BCFY non-perturbative parameter
     double N_kk, eps_kk; // Kniehl & Kramer parameters (N=0.694, eps=0.101)
     FragmentationType frag_type = FragmentationType::BCFY;
-    std::string lhapdf_setname; // LHAPDF FF set name, e.g. "prompt-D0-1-109"
-    int lhapdf_pid;             // parton id fragmenting into the D0 (4 = charm)
-    double lhapdf_Q;            // fragmentation scale Q passed to xfxQ (GeV)
     double zmin, zmax;   // fragmentation z integration range
 
     //Photon flux

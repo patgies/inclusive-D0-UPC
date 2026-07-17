@@ -12,13 +12,6 @@ set(CMAKE_BUILD_TYPE Release)
 find_package(GSL REQUIRED)
 include_directories(${GSL_INCLUDE_DIRS})
 
-find_program(LHAPDF_CONFIG lhapdf-config REQUIRED)
-execute_process(COMMAND ${LHAPDF_CONFIG} --incdir
-        OUTPUT_VARIABLE LHAPDF_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND ${LHAPDF_CONFIG} --libdir
-        OUTPUT_VARIABLE LHAPDF_LIBRARY_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-include_directories(${LHAPDF_INCLUDE_DIR})
-
 add_subdirectory(src)
 
 set_target_properties(amplitude PROPERTIES

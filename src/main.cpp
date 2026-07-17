@@ -7,7 +7,9 @@
 #include "fragmentation.hpp"
 #include <string>
 #include <vector>
+#include <sstream>
 #include <iostream>
+#include <cstdlib>
 #include <cmath>
 #include <gsl/gsl_errno.h>
 
@@ -15,7 +17,18 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    string datafile = (argc > 2) ? argv[2] : "./data/proton/mve.dat";
+    if (argc != 4) {
+        cerr << "Error: expected 3 arguments, got " << argc - 1 << "." << endl;
+        cerr << "Usage: " << argv[0] << " <pD0> <dipole_file> <y>" << endl;
+        cerr << "  pD0         D0 meson transverse momentum [GeV], required" << endl;
+        cerr << "  dipole_file path to a dipole amplitude data file, required" << endl;
+        cerr << "  y           rapidity, required" << endl;
+        return 1;
+    }
+
+    double pD0      = StrToReal(argv[1]);
+    string datafile = argv[2];
+    double y        = StrToReal(argv[3]);
 
     AmplitudeLib inst(datafile);
     inst.SetOutOfRangeErrors(false);
@@ -28,7 +41,7 @@ int main(int argc, char* argv[])
     parameters param;
     param.dipole = &inst;
 
-    param.pD0 = StrToReal(argv[1]);
+    param.pD0 = pD0;
     param.m   = 1.5;
     param.m2  = param.m * param.m;
     param.ss  = 5360.0;
@@ -36,11 +49,7 @@ int main(int argc, char* argv[])
     param.r            = 0.1;
     param.N_kk         = 0.694;
     param.eps_kk       = 0.101;
-    param.frag_type       = FragmentationType::LHAPDF;
-    param.lhapdf_setname  = "prompt-D0-1-109";
-    param.lhapdf_pid      = 4;      // charm quark
-    param.lhapdf_Q        = 1.5;    
-    SetLhapdfScale(param.lhapdf_Q);
+    param.frag_type       = FragmentationType::KniehlKramer;
     param.zmin = 0.05;
     param.zmax = 1.0;
 
@@ -48,7 +57,7 @@ int main(int argc, char* argv[])
     param.Z       = 82.0;
     param.mn      = 0.938;
     param.S       = pow(17.4, 2) / pow(0.197327, 2);
-    param.channel = "An0n";
+    param.channel = getenv("CHANNEL") ? getenv("CHANNEL") : "An0n";
 
     param.bmin    = 14.2 / 0.197327;
     param.bmax    = 650.0;
@@ -59,28 +68,13 @@ int main(int argc, char* argv[])
 
     double mt0 = sqrt(param.pD0*param.pD0 + param.m2);
 
-    vector<double> y_vals = (argc > 3)
-        ? vector<double>{ StrToReal(argv[3]) }
-        : vector<double>{0.0, 0.5, 1.0, 1.5,2.0, 2.5, 3.0, 3.5,4.0};
-
     init_workspace_fourier(1000);
     set_fourier_precision(1.0e-6, 1.0e-6);
 
-    cout << "# ============================================================" << endl;
-    cout << "# Inclusive D0 photoproduction cross section: gamma + A -> D0 + X" << endl;
-    cout << "# ------------------------------------------------------------" << endl;
-    cout << "# Parameters used:" << endl;
-    cout << "#   dipole amplitude file : " << datafile << endl;
-    cout << "#   charm mass m          : " << param.m << " GeV" << endl;
-    cout << "#   sqrt(s)               : " << param.ss << " GeV" << endl;
-    cout << "#   fragmentation         : ";
+    cout << "# fragmentation : ";
     switch (param.frag_type) {
         case FragmentationType::KniehlKramer:
             cout << "Kniehl & Kramer (N=" << param.N_kk << ", eps=" << param.eps_kk << ")";
-            break;
-        case FragmentationType::LHAPDF:
-            cout << "LHAPDF (" << param.lhapdf_setname << ", pid=" << param.lhapdf_pid
-                 << ", Q=" << param.lhapdf_Q << " GeV)";
             break;
         case FragmentationType::BCFY:
         default:
@@ -88,33 +82,20 @@ int main(int argc, char* argv[])
             break;
     }
     cout << endl;
-    cout << "#   z range (frag.)       : [" << param.zmin << ", " << param.zmax << "]" << endl;
-    cout << "#   alpha_EM              : " << param.alpha << endl;
-    cout << "#   Z (nucleus charge)    : " << param.Z << endl;
-    cout << "#   nucleon mass mn       : " << param.mn << " GeV" << endl;
-    cout << "#   EMD channel           : " << param.channel << endl;
-    cout << "#   impact param b range  : [" << param.bmin << ", " << param.bmax << "] GeV^-1" << endl;
-    cout << "#   qp max                : " << param.qpmax << " GeV" << endl;
-    cout << "#   gluon l max           : " << param.lmax << " GeV" << endl;
-    cout << "#   VEGAS calls           : " << param.calls << endl;
-    cout << "#   pD0                   : " << param.pD0 << " GeV" << endl;
-    cout << "# ============================================================" << endl;
+    cout << "# channel       : " << param.channel << endl;
     cout << "# y  dsigma_dy" << endl;
 
-    for (double y : y_vals) {
-        param.y = y;
+    param.y = y;
 
-        double xbj = (mt0 / param.ss) * exp(-y);
-        if (xbj > 0.01) xbj = 0.01;
-        param.xbj  = xbj;
-        param.qpmin = (mt0 / sqrt(2.0)) * exp(y);
+    double xbj = (mt0 / param.ss) * exp(-y);
+    if (xbj > 0.01) xbj = 0.01;
+    param.xbj  = xbj;
+    param.qpmin = (mt0 / sqrt(2.0)) * exp(y);
 
-        // Precompute S_k at this y's xbj (sequential: Fourier workspace not thread-safe)
-        param.Sk_interp = inst.MakeSkInterpolator(xbj, param.lmax);
+    param.Sk_interp = inst.MakeSkInterpolator(xbj, param.lmax);
 
-        double res = D0CrossSection_inclusive(static_cast<void*>(&param));
-        cout << y << "  " << res << endl;
-    }
+    double res = D0CrossSection_inclusive(static_cast<void*>(&param));
+    cout << y << "  " << res << endl;
 
     return 0;
 }

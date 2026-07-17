@@ -3,5 +3,8 @@ build/
 */files/*.dat
 */files/*.txt
 *.o
+*.pdf
+*.tex
+*.sh
 CMakeCache.txt
 CMakeFiles/
