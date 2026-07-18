@@ -44,7 +44,8 @@ double photon_flux(double b, double qp, void* p)
     double emd_factor = 1.0;
     if      (channel == "An0n") emd_factor = P_no_emd;
     else if (channel == "Xn0n") emd_factor = P_no_emd * (1.0 - P_no_emd);
-    return 2.0 * M_PI * b * flux * gamma * emd_factor;
+    //return 2.0 * M_PI * b * flux * gamma * emd_factor;
+    return 2.0*M_PI*b*flux*emd_factor;
 }
 
 // These two unique_ptrs replace BOTH of the old constructs:

@@ -7,6 +7,8 @@ BIN=./build/bin/dipole
 DIPOLE_FILE=./data/proton/mve.dat
 Y=1.0
 OUTDIR=./out
+CHANNEL=${CHANNEL:-An0n}
+export CHANNEL
 
 mkdir -p "$OUTDIR"
 
