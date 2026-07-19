@@ -6,7 +6,7 @@ from scipy.integrate import simpson
 
 pi = math.pi
 alpha_em = 1 / 137
-e_charm_squared = 4 / 9  # (2/3)^2, electric charge of the charm quark
+e_charm_squared = 4 / 9  # (2/3)^2 electric charge of the charm quark
 Nc = 3                   
 
 #  unit conversion (GeV^-2 -> mb)
@@ -79,7 +79,7 @@ def integrate_over_b(pairs):
 
 
 def main():
-    filenames = sorted(glob.glob("files/D0_incl_KniehlKramer_An0n_Gamma1_Pb_y*.dat"))
+    filenames = sorted(glob.glob("files/D0_incl_KniehlKramer_An0n_G1_Pb_y*.dat"))
 
     # results[y] = list of (pt, cross_section) pairs
     results = {}
@@ -118,6 +118,9 @@ def main():
     plt.title("Inclusive $D^0$ photoproduction, Pb+Pb UPC")
     plt.legend()
     plt.tight_layout()
-    plt.savefig("plots/D0_incl_dsigma_dy_dpt_PbPb_gamma1.png", dpi=150)
+    plt.savefig("plots/D0_incl_dsigma_dy_dpt_PbPb_g1.png", dpi=150)
 
+
+if __name__ == "__main__":
+    main()
 

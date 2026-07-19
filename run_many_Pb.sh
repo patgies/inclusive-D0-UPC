@@ -2,10 +2,10 @@
 
 # Usage: ./run_many_Pb.sh
 #
-# Loop in pD0 and y  for EVERY Glauber-sampled dipole file in data/Pb/mve/ (one file per impact
+# Loop in pD0 and y for every Glauber-sampled dipole file in data/Pb/mve/ (one file per impact
 # parameter b, e.g. glauber_mve_0, glauber_mve_2, ..., glauber_mve_32), then
 # combines the runs into one file per rapidity y, with columns:
-#   b  pD0  dsigma_dy
+#   b  pD0  dsigma_dyd2pD0
 # File name: $OUTDIR/files/D0_incl_<frag>_<channel>_Pb_y<Y>.dat
 # where <frag> (BCFY/KniehlKramer/LHAPDF) and <channel> (e.g. An0n) are read back from
 # the run's own header, matching the main.cpp was compiled with.

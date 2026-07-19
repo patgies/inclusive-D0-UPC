@@ -23,7 +23,7 @@ std::vector<int> ParseInts(const std::string& line)
     return out;
 }
 
-} // namespace
+}
 
 std::unique_ptr<Interpolator> MakeLHAPDFZInterpolator(
     const std::string& member_file, int pdg_flavor, double Q)
@@ -32,16 +32,11 @@ std::unique_ptr<Interpolator> MakeLHAPDFZInterpolator(
     if (!in) throw std::runtime_error("MakeLHAPDFZInterpolator: cannot open " + member_file);
 
     std::string line;
-    // Skip header lines (PdfType:, Format:, ...) up to the first "---" separator.
     while (std::getline(in, line)) {
         if (line.compare(0, 3, "---") == 0) break;
     }
 
-    // lhagrid1 format: repeated subgrid blocks, each xgrid/qgrid/flavors
-    // header followed by nx*nq value rows (x outer loop, Q inner loop),
-    // terminated by a "---" line. Subgrids are split at flavor thresholds
-    // and overlap exactly at the boundary, so the first subgrid whose Q
-    // range contains the requested Q is used.
+
     while (std::getline(in, line)) {
         std::vector<double> xgrid = ParseDoubles(line);
         if (xgrid.empty()) break;
@@ -76,12 +71,11 @@ std::unique_ptr<Interpolator> MakeLHAPDFZInterpolator(
             }
         }
 
-        std::getline(in, line);  // consume the "---" line ending this subgrid block
+        std::getline(in, line); 
 
-        if (Q < qgrid.front() || Q > qgrid.back()) continue;  // not this subgrid
+        if (Q < qgrid.front() || Q > qgrid.back()) continue;  
 
-        // Bracket Q within this subgrid's Q points, then linearly interpolate
-        // in Q for every x point to build a 1D f(x, Q) slice.
+    
         size_t iq_hi = 1;
         while (iq_hi < qgrid.size() - 1 && qgrid[iq_hi] < Q) iq_hi++;
         size_t iq_lo = iq_hi - 1;
