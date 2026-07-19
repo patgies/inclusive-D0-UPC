@@ -19,17 +19,22 @@ Requires CMake + GSL (GNU Scientific Library).
 ```
 ./build/bin/dipole <pD0> [<dipole_file>] <y>
 ```
-prints the rapidity and differential cross section at that fixed $p_{D^0}$: $y \quad d\sigma/dyd^2p_{D^0}$.
+prints the rapidity and differential cross section at that fixed $p_{D^0}$: $y$  $d\sigma/dyd^2p_{D^0}$.
 
-`<pD0>` and `<y>` are required. `[<dipole_file>]` can be given as the second arg, or omitted and read from the `DIPOLE_FILE` env var instead. See e.g. `run_local.sh` for a loop over pD0, there `CHANNEL` env var picks the UPC event: `Xn0n`, `An0n`, or `PL(AnAn)` (default `An0n`).
+The arguments `<pD0>` and `<y>` are required. `[<dipole_file>]` can be given as the second argument or omitted and read from the `DIPOLE_FILE` env var in the batch script. See e.g. `run_local.sh`. 
 
-- Dipole files: `data/proton/mve.dat` single file for proton target or `data/Pb(Au)/mve/glauber_mve_<b>` for nuclei (Glauber-sampled, one file per nuclear impact parameter `b`).
-See e.g. `run_many_Pb.sh`,where each output row is per impact parameter $b$, so $b$ still needs to be integrated over (e.g. Simpson's rule, weighted by $2\pi b$) to get a $p_{D^0}$-only spectrum for each rapidity. For a proton target there is no such $b$ and the impact parameter integral results in the proton size. A factor $\alpha_{\textrm{em}}e^{2}_{c}N_{c}/(2\pi)^4$ needs to also be included.
+- Dipole files: `data/proton/mve.dat` single file for a proton target or `data/Pb(Au)/mve/glauber_mve_<b>` for a nucleus target (Glauber-sampled, one file per nuclear impact parameter `b`).  MVe dipole from [rcbkdipole](https://github.com/hejajama/rcbkdipole).
 
- MVe dipole from [rcbkdipole](https://github.com/hejajama/rcbkdipole).
-
+## Differential cross section
 
 
-- The `FRAG_TYPE` env var picks the c → D⁰ fragmentation function: `BCFY`, `KniehlKramer` (default), or `LHAPDF`. Like `CHANNEL`, it's also set in batch scripts `run_local.sh` or `run_many_Pb.sh`.
+- Each output row in `run_many_Pb.sh` is per impact parameter $b$, so $b$ still needs to be integrated over (e.g. Simpson's rule, weighted by $2\pi b$) to get a $p_{D^0}$-only spectrum for each rapidity. For a proton target there is no such $b$ and the impact parameter integral results in the proton size. A factor $\alpha_{\textrm{em}}e^2_cN_c/(2\pi)^4$ needs to also be included. 
+
+- UPC event: the `CHANNEL` env var in the batch scripts `run_local.sh` or `run_many_Pb.sh` picks the event: `Xn0n`, `An0n`, or `PL(AnAn)` (default `An0n`).
+
+
+- Fragmentation function: the `FRAG_TYPE` env var in the batch scripts picks the c → D⁰ fragmentation function: `BCFY`, `KniehlKramer` (default), or `LHAPDF`. 
+
+
 
 Units: GeV^n throughout.
