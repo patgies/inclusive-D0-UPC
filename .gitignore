@@ -1,10 +1,8 @@
 build/
 */build/
-*/files/*.dat
-*/files/*.txt
+files/
 *.o
-run_Pb_Puhti.sh
-runPuhti.sbatch
+run_many_oberon.sh
 CMakeCache.txt
 CMakeFiles/
 FragFunc/
