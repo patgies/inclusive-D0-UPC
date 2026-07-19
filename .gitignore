@@ -3,10 +3,10 @@ build/
 */files/*.dat
 */files/*.txt
 *.o
-*.pdf
-*.tex
 run_Pb_Puhti.sh
 runPuhti.sbatch
 CMakeCache.txt
 CMakeFiles/
-FragFun/
+FragFunc/
+plots/
+pdf/
