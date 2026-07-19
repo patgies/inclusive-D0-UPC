@@ -26,17 +26,15 @@ prints the rapidity and transverse momentum of the $D0$ meson: `y  dsigma_dyd^2p
 
 Dipole files: `data/proton/mve.dat` (single file) or `data/Pb(Au)/mve/glauber_mve_<b>` (Glauber-sampled, one file per nuclear impact parameter `b`). See e.g. `run_many_Pb.sh` .
 
-For Pb(Au), each `run_many_Pb.sh` output row is per impact parameter `b`, so `b` still needs to be integrated over (Simpson's rule, weighted by `b`) to get a `pD0`-only spectrum. See e.g., `cross_section.py` which does this internally and turns the raw `b pD0 dsigma_dy` grid into `dsigma/dpD0 dy` directly. For proton has no such `b` and the impact parameter integral results in the proton size.
+For Pb(Au), each `run_many_Pb.sh` output row is per impact parameter `b`, so `b` still needs to be integrated over (Simpson's rule, weighted by `b`) to get a `pD0`-only spectrum. See e.g., `cross_section.py` which does this internally and turns the raw `b pD0 dsigma_dypD0` grid into `dsigma/dpD0 dy` directly. For a proton target there is no such `b` and the impact parameter integral results in the proton size.
 
 
 MVe dipole from [rcbkdipole](https://github.com/hejajama/rcbkdipole).
+
+Units: GeV^n throughout.
 
 ## Fragmentation function
 `FRAG_TYPE` env var picks the c → D⁰ fragmentation function: `BCFY`, `KniehlKramer` (default), or `LHAPDF`.
 ```
 FRAG_TYPE="LHAPDF" ./build/bin/dipole 2.0 ./data/proton/mve.dat 1.0
 ```
-`LHAPDF` reads member 0 (central value) of an LHAPDF `lhagrid1`-format grid, evaluated at fixed `Q = m` (charm mass) — no dependency on the LHAPDF library itself. Defaults to `data/prompt-D0-1-109/prompt-D0-1-109_0000.dat`, override with `LHAPDF_FILE`. 
-
-
-Units: GeV^n throughout.
