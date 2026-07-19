@@ -5,7 +5,7 @@
 #include "amplitudelib.hpp"
 #include "interpolation.hpp"
 
-enum class FragmentationType { BCFY, KniehlKramer };
+enum class FragmentationType { BCFY, KniehlKramer, LHAPDF };
 
 struct parameters
 {
@@ -35,6 +35,10 @@ struct parameters
 
     // Precomputed S_k grid for momentum-space evaluation
     std::unique_ptr<Interpolator> Sk_interp;
+
+    // Precomputed z-interpolator for the LHAPDF fragmentation function,
+    // evaluated at fixed Q=m (only used when frag_type == FragmentationType::LHAPDF)
+    std::unique_ptr<Interpolator> D_frag_interp;
 
     // Fixed photon momentum for differential-in-qp calculation
     double qp_fixed = 0.0;

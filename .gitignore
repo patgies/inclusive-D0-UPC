@@ -5,6 +5,8 @@ build/
 *.o
 *.pdf
 *.tex
-*.sh
+run_Pb_Puhti.sh
+runPuhti.sbatch
 CMakeCache.txt
 CMakeFiles/
+FragFun/

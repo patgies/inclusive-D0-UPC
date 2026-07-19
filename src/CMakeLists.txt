@@ -15,7 +15,8 @@ add_executable(
 	gamma_aa.cpp
     fourier.c
 	fragmentation.cpp
-)	
+	lhapdf_grid.cpp
+)
 
 target_link_libraries(
 	dipole

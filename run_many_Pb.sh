@@ -1,26 +1,17 @@
 #!/bin/bash
 
 # Usage: ./run_many_Pb.sh
-#   OUTDIR=/scratch/me CORES=40 ./run_many_Pb.sh   # override output dir / concurrency
-#   CHANNEL="PL(AnAn)" ./run_many_Pb.sh             # override EMD channel (default An0n)
 #
-# Sweeps pD0 and y (one dipole process per (pD0, b, y) triple -- the binary
-# takes a single required y argument, it does not loop internally) against
-# EVERY Glauber-sampled dipole file in data/Pb/mve/ (one file per impact
+# Loop in pD0 and y  for EVERY Glauber-sampled dipole file in data/Pb/mve/ (one file per impact
 # parameter b, e.g. glauber_mve_0, glauber_mve_2, ..., glauber_mve_32), then
 # combines the runs into one file per rapidity y, with columns:
 #   b  pD0  dsigma_dy
 # File name: $OUTDIR/files/D0_incl_<frag>_<channel>_Pb_y<Y>.dat
-# where <frag> (BCFY/KniehlKramer) and <channel> (e.g. An0n) are read back from
-# the run's own header, matching whatever main.cpp was compiled with.
+# where <frag> (BCFY/KniehlKramer/LHAPDF) and <channel> (e.g. An0n) are read back from
+# the run's own header, matching the main.cpp was compiled with.
 #
 # b is meant to be integrated over afterwards in Python (Simpson's rule,
-# weighted by b, i.e. the radial measure in 2D polar coordinates) -- this
-# script only produces the raw per-b, per-pD0, per-y grid.
-#
-# Also called (with OUTDIR/CORES set) by run_csc_Pb.sh: build/bin/dipole
-# has no internal OpenMP, so parallelism is at the process level, one
-# dipole process per (pD0, b, y) triple.
+# weighted by b, this script only produces the raw per-b, per-pD0, per-y grid.
 
 y_vals=${Y_VALS:-"0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0"}
 OUTDIR=${OUTDIR:-.}
@@ -42,22 +33,24 @@ for dfile in "$DIPOLE_DIR"/glauber_mve_*; do
 		for y in $y_vals; do
 			ytag=$(echo "$y" | tr -d '.')
 			./build/bin/dipole "${pt}" "$dfile" "${y}" > "${tmpdir}/b${b}_pD0_${pt}_y${ytag}.dat" &
-			# cap concurrency to $CORES -- plain poll loop instead of `wait -n`
-			# (bash >=4.3 only; some servers still ship an older bash as /bin/bash)
 			while (( $(jobs -r | wc -l) >= CORES )); do sleep 0.2; done
 		done
 	done
 done
 wait
 
-# Shared physics parameters are identical across all runs (only pD0, b and y
-# vary), so reuse one run's header for every output file.
+
 first_tmp=$(ls "${tmpdir}"/b*_pD0_*_y*.dat | head -1)
 header=$(grep '^#' "$first_tmp" | grep -v '^# y  dsigma_dy')
 
-# Derive filename tags from the actual run instead of hardcoding them, so the
-# name can't drift out of sync with param.use_kniehl_kramer / param.channel in main.cpp.
-frag_tag=$(grep -q 'fragmentation.*Kniehl & Kramer' "$first_tmp" && echo "KniehlKramer" || echo "BCFY")
+
+if grep -q 'fragmentation.*Kniehl & Kramer' "$first_tmp"; then
+	frag_tag="KniehlKramer"
+elif grep -q 'fragmentation.*LHAPDF' "$first_tmp"; then
+	frag_tag="LHAPDF"
+else
+	frag_tag="BCFY"
+fi
 channel_tag=$(grep '^# channel' "$first_tmp" | sed 's/.*: //' | tr -d '() ')
 
 for y in $y_vals; do
@@ -67,7 +60,7 @@ for y in $y_vals; do
 	{
 		echo "$header"
 		echo "#   dipole file dir       : ${DIPOLE_DIR}/glauber_mve_<b>"
-		echo "#   pD0 sweep             : ${PT_MIN} to ${PT_MAX} GeV, step ${PT_STEP}"
+		echo "#   pD0 loop             : ${PT_MIN} to ${PT_MAX} GeV, step ${PT_STEP}"
 		echo "#   fixed rapidity y      : ${y}"
 		echo "# ============================================================"
 		echo "# b  pD0  dsigma_dy"

@@ -1,60 +1,40 @@
 # Inclusive D0 photoproduction
 
-Differential cross section for inclusive D⁰ photoproduction in UPCs, in the CGC formalism.
-Select a UPC event (`Xn0n`, `An0n`, `PL(AnAn)`) and a fragmentation function (`KniehlKramer`, `BCFY`).
+Differential cross section in rapidity and transverse momentum for inclusive D⁰ photoproduction in UPCs in the CGC formalism.
+Select a UPC event (`Xn0n`, `An0n`, `PL(AnAn)`) and a fragmentation function (`KniehlKramer` [[hep-ph/0504058](https://arxiv.org/abs/hep-ph/0504058)], `BCFY` [[hep-ph/9409316](https://arxiv.org/abs/hep-ph/9409316)], `LHAPDF`).
 
-Based on P.Gimeno-Estivill, T.Lappi, H.Mäntysaari, [2503.16108](https://arxiv.org/abs/2503.16108)
+Based on P.Gimeno-Estivill, T.Lappi, H.Mäntysaari, *Inclusive D⁰ photoproduction in ultraperipheral collisions*, Phys. Rev. D 111, 114036 (2025) [[doi:10.1103/7741-585p](https://doi.org/10.1103/7741-585p)]
 
 ***
 ## Build
 ```
-mkdir -p build && cd build
-cmake .. && make
+mkdir build
+cd build
+cmake ..
+make
 ```
-Needs CMake + GSL.
+Requires CMake + GSL (GNU Scientific Library).
 
 ## Run
 ```
-./build/bin/dipole <pD0> <dipole_file> <y>
+./build/bin/dipole <pD0> [<dipole_file>] <y>
 ```
-All three args required, no defaults/sweep. `CHANNEL` env var picks the UPC event: `Xn0n`, `An0n`, or `PL(AnAn)` (default `An0n`).
+prints the rapidity and transverse momentum of the $D0$ meson: `y  dsigma_dyd^2pD0` .
 
-```
-./build/bin/dipole 2.0 ./data/Pb/mve/glauber_mve_10 1.5
-CHANNEL="PL(AnAn)" ./build/bin/dipole 2.0 ./data/Pb/mve/glauber_mve_10 1.5
-```
-prints `y  dsigma_dyd^2p` (one line).
+`<pD0>` and `<y>` are required. `dipole_file` can be given as the second positional arg, or omitted and read from the `DIPOLE_FILE` env var instead. See e.g. `run_local.sh` for a loop over pD0. `CHANNEL` env var picks the UPC event: `Xn0n`, `An0n`, or `PL(AnAn)` (default `An0n`).
 
-Dipole files: `data/proton/mve.dat` (single file) or `data/Pb(Au)/mve/glauber_mve_<b>` (Glauber-sampled, one file per nuclear impact parameter `b`). MVe dipole from [rcbkdipole](https://github.com/hejajama/rcbkdipole).
 
-## Sweeping
-No sweep built in — loop over `dipole` calls yourself, e.g. proton, fixed y:
-```
-for pt in $(seq 0.1 0.2 12.0); do
-    val=$(./build/bin/dipole "$pt" ./data/proton/mve.dat 1.0 | awk '$1 !~ /^#/ {print $2}')
-    echo "$pt  $val"
-done > out/spectrum_y1.0.dat
-```
-For Pb/Au also loop over the `glauber_mve_*` files and tag each line with its `b`:
-```
-for y in 0.0 1.0 2.0; do
-  for dfile in data/Pb/mve/glauber_mve_*; do
-    b=$(basename "$dfile" | sed 's/glauber_mve_//')
-    for pt in $(seq 0.1 0.5 12.0); do
-        val=$(./build/bin/dipole "$pt" "$dfile" "$y" | awk '$1 !~ /^#/ {print $2}')
-        echo "$b  $pt  $val"
-    done
-  done > out/D0_incl_Pb_y${y}.dat
-done
-```
-That `b` (nuclear impact parameter, from the file name — not the photon-emission `b` already integrated inside the Vegas call) still needs integrating over: see `b_integral.ipynb` (Simpson, weighted by `b`). Proton has no such `b`. `cross_section.ipynb` turns the resulting `pD0` grid into `dsigma/dpD0 dy`.
+Dipole files: `data/proton/mve.dat` (single file) or `data/Pb(Au)/mve/glauber_mve_<b>` (Glauber-sampled, one file per nuclear impact parameter `b`). See e.g. `run_many_Pb.sh` .
 
-Each `(pD0, dipole_file, y)` call is independent — parallelize with `xargs -P`/GNU `parallel` if it's slow.
+MVe dipole from [rcbkdipole](https://github.com/hejajama/rcbkdipole).
 
-The two loops above are also available as ready-made scripts: `run_local.sh` (proton, single dipole file, single `y`) and `run_many_Pb.sh` (Pb/Au sweep over `glauber_mve_*` and multiple `y`, parallelized across processes, `OUTDIR`/`CORES` overridable). Both export `CHANNEL` (default `An0n`) to the `dipole` calls they make, so:
+## Fragmentation function
+`FRAG_TYPE` env var picks the c → D⁰ fragmentation function: `BCFY`, `KniehlKramer` (default), or `LHAPDF`.
 ```
-CHANNEL="PL(AnAn)" ./run_local.sh
-CHANNEL="PL(AnAn)" ./run_many_Pb.sh
+FRAG_TYPE="LHAPDF" ./build/bin/dipole 2.0 ./data/proton/mve.dat 1.0
 ```
+`LHAPDF` reads member 0 (central value) of an LHAPDF `lhagrid1`-format grid, evaluated at fixed `Q = m` (charm mass) — no dependency on the LHAPDF library itself. Defaults to `data/prompt-D0-1-109/prompt-D0-1-109_0000.dat`, override with `LHAPDF_FILE`. 
+
+
 
 Units: GeV^n throughout.
