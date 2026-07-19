@@ -104,6 +104,7 @@ def load_results(pattern):
 def main():
     results_g1 = load_results("files/D0_incl_KniehlKramer_An0n_G1_Pb_y*.dat")
     results_no_g1 = load_results("files/D0_incl_KniehlKramer_An0n_Pb_y*.dat")
+    results_bcfy = load_results("files/D0_incl_BCFY_An0n_Pb_y*.dat")
 
     #Plot the results for each rapidity y
 
@@ -131,6 +132,14 @@ def main():
         cross_section_values = [pair[1] for pair in points]
         plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle="--")
 
+    for y in sorted(results_bcfy):
+        if y > 2.0:
+            continue
+        points = sorted(results_bcfy[y], key=lambda pair: pair[0])
+        pt_values = [pair[0] for pair in points]
+        cross_section_values = [pair[1] for pair in points]
+        plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle=":")
+
     plt.yscale("log")
     plt.xlabel(r"$p_{D^0}$ [GeV]")
     plt.ylabel(r"$d\sigma/dy\,dp_T$ [mb/GeV]")
@@ -139,8 +148,9 @@ def main():
     y_legend = plt.legend(loc="upper right")
     plt.gca().add_artist(y_legend)
     style_handles = [
-        Line2D([0], [0], color="black", linestyle="-", label="G1"),
-        Line2D([0], [0], color="black", linestyle="--", label="no G1"),
+        Line2D([0], [0], color="black", linestyle="-", label="KniehlKramer, G1"),
+        Line2D([0], [0], color="black", linestyle="--", label="KniehlKramer, no G1"),
+        Line2D([0], [0], color="black", linestyle=":", label="BCFY"),
     ]
     plt.legend(handles=style_handles, loc="lower left")
 

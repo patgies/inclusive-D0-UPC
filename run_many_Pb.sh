@@ -7,10 +7,8 @@
 # combines the runs into one file per rapidity y, with columns:
 #   b  pD0  dsigma_dyd2pD0
 # File name: $OUTDIR/files/D0_incl_<frag>_<channel>_Pb_y<Y>.dat
-# where <frag> (BCFY/KniehlKramer/LHAPDF) and <channel> (e.g. An0n) are read back from
-# the run's own header, matching the main.cpp was compiled with.
 #
-# b is meant to be integrated over afterwards in Python (Simpson's rule,
+# b is meant to be integrated over afterwards (e.g. Simpson's rule,
 # weighted by b, this script only produces the raw per-b, per-pD0, per-y grid.
 
 y_vals=${Y_VALS:-"0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0"}
