@@ -1,8 +1,8 @@
 build/
 */build/
-files/
+#files/
 *.o
-run_many_oberon.sh
+#run_many_oberon.sh
 CMakeCache.txt
 CMakeFiles/
 FragFunc/
