@@ -22,6 +22,8 @@ PT_MAX=${PT_MAX:-12.0}
 DIPOLE_DIR=${DIPOLE_DIR:-data/Pb/mve}
 CHANNEL=${CHANNEL:-An0n}
 export CHANNEL
+FRAG_TYPE=${FRAG_TYPE:-KniehlKramer}
+export FRAG_TYPE
 
 mkdir -p "$OUTDIR/files"
 tmpdir=$(mktemp -d)
@@ -63,7 +65,7 @@ for y in $y_vals; do
 		echo "#   pD0 loop             : ${PT_MIN} to ${PT_MAX} GeV, step ${PT_STEP}"
 		echo "#   fixed rapidity y      : ${y}"
 		echo "# ============================================================"
-		echo "# b  pD0  dsigma_dy"
+		echo "# b  pD0  dsigma_dyd2pD0"
 		for dfile in "$DIPOLE_DIR"/glauber_mve_*; do
 			b=$(basename "$dfile" | sed 's/glauber_mve_//')
 			for pt in $(seq $PT_MIN $PT_STEP $PT_MAX); do

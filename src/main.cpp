@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
     }
     cout << endl;
     cout << "# channel       : " << param.channel << endl;
-    cout << "# y  dsigma_dy" << endl;
+    cout << "# y  dsigma_dyd^2pD0" << endl;
 
     param.y = y;
 

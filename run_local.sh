@@ -10,6 +10,8 @@ Y=1.0
 OUTDIR=./out
 CHANNEL=${CHANNEL:-An0n}
 export CHANNEL
+FRAG_TYPE=${FRAG_TYPE:-KniehlKramer}
+export FRAG_TYPE
 
 mkdir -p "$OUTDIR"
 

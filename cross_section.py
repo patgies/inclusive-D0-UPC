@@ -1,6 +1,7 @@
 import glob
 import math
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from scipy.integrate import simpson
 
 
@@ -78,13 +79,11 @@ def integrate_over_b(pairs):
     return simpson(weighted_values, x=b_values)
 
 
-def main():
-    filenames = sorted(glob.glob("files/D0_incl_KniehlKramer_An0n_G1_Pb_y*.dat"))
-
-    # results[y] = list of (pt, cross_section) pairs
+def load_results(pattern):
+    """Read all files matching pattern and return {y: [(pt, cross_section), ...]}."""
     results = {}
 
-    for filename in filenames:
+    for filename in sorted(glob.glob(pattern)):
         y = read_rapidity(filename)
         b_list, pt_list, dsigma_list = read_data_file(filename)
         pt_groups = group_by_pt(b_list, pt_list, dsigma_list)
@@ -99,24 +98,52 @@ def main():
 
             results[y].append((pt, cross_section))
 
+    return results
+
+
+def main():
+    results_g1 = load_results("files/D0_incl_KniehlKramer_An0n_G1_Pb_y*.dat")
+    results_no_g1 = load_results("files/D0_incl_KniehlKramer_An0n_Pb_y*.dat")
 
     #Plot the results for each rapidity y
-    
+
     plt.figure(figsize=(7, 5))
 
-    for y in sorted(results):
+    color_cycle = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    colors = {
+        y: color_cycle[i % len(color_cycle)]
+        for i, y in enumerate(sorted(y for y in results_g1 if y <= 2.0))
+    }
+
+    for y in sorted(results_g1):
         if y > 2.0:
             continue
-        points = sorted(results[y], key=lambda pair: pair[0])
+        points = sorted(results_g1[y], key=lambda pair: pair[0])
         pt_values = [pair[0] for pair in points]
         cross_section_values = [pair[1] for pair in points]
-        plt.plot(pt_values, cross_section_values, label=f"y={y}")
+        plt.plot(pt_values, cross_section_values, color=colors[y], linestyle="-", label=f"y={y}")
+
+    for y in sorted(results_no_g1):
+        if y > 2.0:
+            continue
+        points = sorted(results_no_g1[y], key=lambda pair: pair[0])
+        pt_values = [pair[0] for pair in points]
+        cross_section_values = [pair[1] for pair in points]
+        plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle="--")
 
     plt.yscale("log")
     plt.xlabel(r"$p_{D^0}$ [GeV]")
     plt.ylabel(r"$d\sigma/dy\,dp_T$ [mb/GeV]")
     plt.title("Inclusive $D^0$ photoproduction, Pb+Pb UPC")
-    plt.legend()
+
+    y_legend = plt.legend(loc="upper right")
+    plt.gca().add_artist(y_legend)
+    style_handles = [
+        Line2D([0], [0], color="black", linestyle="-", label="G1"),
+        Line2D([0], [0], color="black", linestyle="--", label="no G1"),
+    ]
+    plt.legend(handles=style_handles, loc="lower left")
+
     plt.tight_layout()
     plt.savefig("plots/D0_incl_dsigma_dy_dpt_PbPb_g1.png", dpi=150)
 
