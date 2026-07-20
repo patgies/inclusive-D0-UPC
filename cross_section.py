@@ -147,7 +147,7 @@ def main():
     results_g1 = load_results("files/D0_incl_KniehlKramer_An0n_G1_Pb_y*.dat")
     results_no_g1 = load_results("files/D0_incl_KniehlKramer_An0n_Pb_y*.dat")
     results_bcfy = load_results("files/D0_incl_BCFY_An0n_Pb_y*.dat")
-    lhapdf_band = load_lhapdf_band("out/lhapdf/member_*")
+    lhapdf_band = load_lhapdf_band("files/lhapdf/member_*")
     results_lhapdf = None if lhapdf_band else load_results("files/D0_incl_LHAPDF_An0n_Pb_y*.dat")
 
     #Plot the results for each rapidity y

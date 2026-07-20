@@ -41,17 +41,31 @@ wait
 
 
 first_tmp=$(ls "${tmpdir}"/b*_pD0_*_y*.dat | head -1)
-header=$(grep '^#' "$first_tmp" | grep -v '^# y  dsigma_dy')
 
+if [[ ! -s "$first_tmp" ]]; then
+	echo "Error: $first_tmp is empty -- the dipole run for that (b, pD0, y) point likely crashed. Aborting instead of silently mislabeling the output." >&2
+	exit 1
+fi
+
+header=$(grep '^#' "$first_tmp" | grep -v '^# y  dsigma_dy')
 
 if grep -q 'fragmentation.*Kniehl & Kramer' "$first_tmp"; then
 	frag_tag="KniehlKramer"
 elif grep -q 'fragmentation.*LHAPDF' "$first_tmp"; then
 	frag_tag="LHAPDF"
-else
+elif grep -q 'fragmentation.*BCFY' "$first_tmp"; then
 	frag_tag="BCFY"
+else
+	echo "Error: could not detect a known fragmentation tag in $first_tmp's header:" >&2
+	cat "$first_tmp" >&2
+	exit 1
 fi
+
 channel_tag=$(grep '^# channel' "$first_tmp" | sed 's/.*: //' | tr -d '() ')
+if [[ -z "$channel_tag" ]]; then
+	echo "Error: could not detect a channel tag in $first_tmp's header." >&2
+	exit 1
+fi
 
 for y in $y_vals; do
 	ytag=$(echo "$y" | tr -d '.')
