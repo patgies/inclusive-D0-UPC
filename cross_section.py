@@ -1,5 +1,7 @@
 import glob
 import math
+import os
+import statistics
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from scipy.integrate import simpson
@@ -101,10 +103,52 @@ def load_results(pattern):
     return results
 
 
+def load_lhapdf_band(member_dir_pattern):
+    """
+    Read one run_many_Pb.sh output set per LHAPDF replica member (each
+    matching member_dir_pattern, e.g. 'out/lhapdf/member_*') and combine them
+    into a mean +/- standard-deviation band per rapidity. The LHAPDF set's
+    ErrorType is "replicas" (see data/prompt-D0-1-109/prompt-D0-1-109.info),
+    so the standard deviation across members is the correct uncertainty
+    measure -- not a Hessian eigenvector-pair formula.
+
+    Returns {y: (pt_values, mean_values, std_values)}, or {} if no member
+    directories are found yet (run_lhapdf_members.sh hasn't been run).
+    """
+    member_dirs = sorted(glob.glob(member_dir_pattern))
+    if not member_dirs:
+        return {}
+
+    per_member_results = [
+        load_results(os.path.join(member_dir, "files/D0_incl_LHAPDF_An0n_Pb_y*.dat"))
+        for member_dir in member_dirs
+    ]
+
+    band = {}
+    for y in per_member_results[0]:
+        pt_values = sorted(pt for pt, _ in per_member_results[0][y])
+
+        cross_sections_by_pt = []
+        for pt in pt_values:
+            values = []
+            for results in per_member_results:
+                points = dict(results[y])
+                values.append(points[pt])
+            cross_sections_by_pt.append(values)
+
+        means = [statistics.mean(values) for values in cross_sections_by_pt]
+        stds = [statistics.pstdev(values) for values in cross_sections_by_pt]
+        band[y] = (pt_values, means, stds)
+
+    return band
+
+
 def main():
     results_g1 = load_results("files/D0_incl_KniehlKramer_An0n_G1_Pb_y*.dat")
     results_no_g1 = load_results("files/D0_incl_KniehlKramer_An0n_Pb_y*.dat")
     results_bcfy = load_results("files/D0_incl_BCFY_An0n_Pb_y*.dat")
+    lhapdf_band = load_lhapdf_band("out/lhapdf/member_*")
+    results_lhapdf = None if lhapdf_band else load_results("files/D0_incl_LHAPDF_An0n_Pb_y*.dat")
 
     #Plot the results for each rapidity y
 
@@ -140,6 +184,25 @@ def main():
         cross_section_values = [pair[1] for pair in points]
         plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle=":")
 
+    if lhapdf_band:
+        for y in sorted(lhapdf_band):
+            if y > 2.0:
+                continue
+            pt_values, means, stds = lhapdf_band[y]
+            color = colors.get(y)
+            lower = [max(mean - std, 1e-12) for mean, std in zip(means, stds)]
+            upper = [mean + std for mean, std in zip(means, stds)]
+            plt.fill_between(pt_values, lower, upper, color=color, alpha=0.2, linewidth=0)
+            plt.plot(pt_values, means, color=color, linestyle="-.")
+    else:
+        for y in sorted(results_lhapdf):
+            if y > 2.0:
+                continue
+            points = sorted(results_lhapdf[y], key=lambda pair: pair[0])
+            pt_values = [pair[0] for pair in points]
+            cross_section_values = [pair[1] for pair in points]
+            plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle="-.")
+
     plt.yscale("log")
     plt.xlabel(r"$p_{D^0}$ [GeV]")
     plt.ylabel(r"$d\sigma/dy\,dp_T$ [mb/GeV]")
@@ -151,6 +214,10 @@ def main():
         Line2D([0], [0], color="black", linestyle="-", label="KniehlKramer, G1"),
         Line2D([0], [0], color="black", linestyle="--", label="KniehlKramer, no G1"),
         Line2D([0], [0], color="black", linestyle=":", label="BCFY"),
+        Line2D(
+            [0], [0], color="black", linestyle="-.",
+            label="LHAPDF (mean +/- std over replicas)" if lhapdf_band else "LHAPDF (member 0, no errors)",
+        ),
     ]
     plt.legend(handles=style_handles, loc="lower left")
 
