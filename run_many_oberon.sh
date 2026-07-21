@@ -18,6 +18,12 @@
 
 set -euo pipefail
 
+# build/bin/dipole is dynamically linked against libstdc++ (see
+# src/CMakeLists.txt), so the compute node needs the same toolchain module
+# loaded as the login/build node -- otherwise its default /lib64/libstdc++.so.6
+# is too old (missing e.g. GLIBCXX_3.4.32) and the binary fails to even start.
+module load GCCcore/13.3.0
+
 OUTDIR=${OUTDIR:-$PWD/out}
 # Leave 2 cores free by default instead of claiming the whole box -- override
 # with CORES=N, or let SLURM_CPUS_PER_TASK drive it if -c was passed to sbatch.

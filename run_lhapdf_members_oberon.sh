@@ -39,6 +39,12 @@
 
 set -euo pipefail
 
+# build/bin/dipole is dynamically linked against libstdc++ (see
+# src/CMakeLists.txt), so the compute node needs the same toolchain module
+# loaded as the login/build node -- otherwise its default /lib64/libstdc++.so.6
+# is too old (missing e.g. GLIBCXX_3.4.32) and the binary fails to even start.
+module load GCCcore/13.3.0
+
 LHAPDF_DIR=${LHAPDF_DIR:-data/prompt-D0-1-109}
 LHAPDF_SET=${LHAPDF_SET:-prompt-D0-1-109}
 OUTBASE=${OUTBASE:-$PWD/out/lhapdf}

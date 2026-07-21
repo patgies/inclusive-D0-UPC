@@ -24,11 +24,6 @@ target_link_libraries(
 	amplitude
 	GSL::gsl
 	GSL::gslcblas
-	# Statically link the C++ runtime so the binary doesn't depend on
-	# whatever libstdc++.so.6 happens to be installed on a given compute
-	# node -- login/build nodes often have a newer GCC module loaded than
-	# compute nodes get by default, causing GLIBCXX_* "version not found"
-	# errors at runtime otherwise.
 	-static-libstdc++
 	-static-libgcc
 )
