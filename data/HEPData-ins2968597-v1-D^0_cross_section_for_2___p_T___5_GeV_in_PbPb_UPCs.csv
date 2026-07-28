@@ -1,0 +1,15 @@
+#: table_doi: 10.17182/hepdata.156822.v1/t2
+#: name: D$^0$ cross section for $2 < p_T < 5$ GeV in PbPb UPCs
+#: description: The d$^{2}\sigma$/dydp$_{\mathrm{T}}$ production cross section of D$^{0}$ for $2 < p_{\mathrm{T}} < 5$ GeV in ultraperipheral PbPb collisions.
+#: data_file: d$^0$_cross_section_for_$2_<_p_t_<_5$_gev_in_pbpb_upcs.yaml
+#: keyword observables: d2sigmadptdy
+#: keyword phrases: UPC | Rapidity | D0 | Differential | Shadowing | nPDF
+#: keyword reactions: PB PB --> D0 <pi+ K-> + PB + X
+#: keyword cmenergies: 5360
+#: PT,,,2 -- 5 GeV
+#: SQRT(S)/NUCLEON,,,5360 GeV
+#: RE,,,PB PB --> D0 <pi+ K-> + PB + X
+#: Y,,,-1.0 -- 1.0
+$y$,$y$ LOW,$y$ HIGH,d$^{2}\sigma$/dydp$_{\mathrm{T}}$ (mb/GeV),Stat. +,Stat. -,Syst. +,Syst. -
+0.0,-1.0,1.0,2.15,0.15,-0.15,0.58,-0.58
+

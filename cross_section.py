@@ -10,9 +10,9 @@ from scipy.integrate import simpson
 pi = math.pi
 alpha_em = 1 / 137
 e_charm_squared = 4 / 9  # (2/3)^2 electric charge of the charm quark
-Nc = 3                   
+Nc = 3
 
-#  unit conversion (GeV^-2 -> mb)
+# unit conversion (GeV^-2 -> mb)
 FMGEV = 5.068
 GEVSQR_TO_NB = 1.0e7 / (FMGEV * FMGEV)
 GEVSQR_TO_MB = GEVSQR_TO_NB * 1e-6
@@ -25,44 +25,50 @@ factor_A = alpha_em * e_charm_squared * Nc / (2 * pi) ** 4
 A = 208
 ATA = 30.756  # dimensionless
 
-#Given (b, dsigma) pairs at a fixed pT, integrate b*dsigma over b using Simpson's rule.
 
 def read_rapidity(filename):
-    """Find the line '# fixed rapidity y : <value>' in the file header and return it."""
-    with open(filename) as f:
-        for line in f:
-            if "fixed rapidity y" in line:
-                text_after_colon = line.split(":")[-1]
-                return float(text_after_colon)
-    raise ValueError(f"no rapidity header found in {filename}")
+    # look for the line that says "fixed rapidity y : <value>"
+    # and give back that value as a number
+    f = open(filename)
+    for line in f:
+        if "fixed rapidity y" in line:
+            parts = line.split(":")
+            text_after_colon = parts[-1]
+            f.close()
+            return float(text_after_colon)
+    f.close()
+    raise ValueError("no rapidity header found in " + filename)
 
 
 def read_data_file(filename):
-    """
-    Read one 'b  pT  dsigma_dy' data file, skipping comment lines (starting
-    with '#'). Returns three plain lists of the same length: b, pt, dsigma.
-    """
+    # read a "b  pT  dsigma_dy" file and put the 3 columns into 3 lists
     b_list = []
     pt_list = []
     dsigma_list = []
 
-    with open(filename) as f:
-        for line in f:
-            line = line.strip()
-            if line == "" or line.startswith("#"):
-                continue
-            columns = line.split()
-            b_list.append(float(columns[0]))
-            pt_list.append(float(columns[1]))
-            dsigma_list.append(float(columns[2]))
+    f = open(filename)
+    for line in f:
+        line = line.strip()
+        if line == "":
+            continue
+        if line.startswith("#"):
+            continue
+        columns = line.split()
+        b_list.append(float(columns[0]))
+        pt_list.append(float(columns[1]))
+        dsigma_list.append(float(columns[2]))
+    f.close()
 
     return b_list, pt_list, dsigma_list
 
 
 def group_by_pt(b_list, pt_list, dsigma_list):
-    """Group the (b, dsigma) pairs by their pT value: {pt: [(b, dsigma), ...]}."""
+    # put the (b, dsigma) pairs into a dictionary, one list per pT value
     groups = {}
-    for b, pt, dsigma in zip(b_list, pt_list, dsigma_list):
+    for i in range(len(pt_list)):
+        b = b_list[i]
+        pt = pt_list[i]
+        dsigma = dsigma_list[i]
         if pt not in groups:
             groups[pt] = []
         groups[pt].append((b, dsigma))
@@ -70,28 +76,35 @@ def group_by_pt(b_list, pt_list, dsigma_list):
 
 
 def integrate_over_b(pairs):
-    """
-    Given (b, dsigma) pairs at a fixed pT, integrate b*dsigma over b using
-    Simpson's rule. This is the radial measure of the 2D impact-parameter
-    (b) integral, int b * dsigma_dy(b) db.
-    """
-    pairs = sorted(pairs, key=lambda pair: pair[0])
-    b_values = [pair[0] for pair in pairs]
-    weighted_values = [b * dsigma for b, dsigma in pairs]
+    # integrate b * dsigma over b using Simpson's rule
+    pairs = list(pairs)
+    pairs.sort()  # (b, dsigma) tuples sort by b first, which is what we want
+
+    b_values = []
+    weighted_values = []
+    for pair in pairs:
+        b = pair[0]
+        dsigma = pair[1]
+        b_values.append(b)
+        weighted_values.append(b * dsigma)
+
     return simpson(weighted_values, x=b_values)
 
 
 def load_results(pattern):
-    """Read all files matching pattern and return {y: [(pt, cross_section), ...]}."""
+    # read every file that matches "pattern" and return
+    # a dictionary: y value -> list of (pT, cross section)
     results = {}
 
-    for filename in sorted(glob.glob(pattern)):
+    file_list = sorted(glob.glob(pattern))
+    for filename in file_list:
         y = read_rapidity(filename)
         b_list, pt_list, dsigma_list = read_data_file(filename)
         pt_groups = group_by_pt(b_list, pt_list, dsigma_list)
 
         results[y] = []
-        for pt, pairs in pt_groups.items():
+        for pt in pt_groups:
+            pairs = pt_groups[pt]
             b_integral = integrate_over_b(pairs)
 
             # (2*pi)^2 comes from d^2p -> dp*p*(2*pi) (the pT integral) and
@@ -104,29 +117,25 @@ def load_results(pattern):
 
 
 def load_lhapdf_band(member_dir_pattern):
-    """
-    Read one run_many_Pb.sh output set per LHAPDF replica member (each
-    matching member_dir_pattern, e.g. 'out/lhapdf/member_*') and combine them
-    into a mean +/- standard-deviation band per rapidity. The LHAPDF set's
-    ErrorType is "replicas" (see data/prompt-D0-1-109/prompt-D0-1-109.info),
-    so the standard deviation across members is the correct uncertainty
-    measure -- not a Hessian eigenvector-pair formula.
-
-    Returns {y: (pt_values, mean_values, std_values)}, or {} if no member
-    directories are found yet (run_lhapdf_members.sh hasn't been run).
-    """
+    # Combine one run_many_Pb.sh output set per LHAPDF replica member into
+    # a mean +/- standard-deviation band per rapidity. Returns an empty
+    # dictionary if there are no member directories yet (that is, if
+    # run_lhapdf_members.sh hasn't been run).
     member_dirs = sorted(glob.glob(member_dir_pattern))
-    if not member_dirs:
+    if len(member_dirs) == 0:
         return {}
 
-    per_member_results = [
-        load_results(os.path.join(member_dir, "files/D0_incl_LHAPDF_An0n_Pb_y*.dat"))
-        for member_dir in member_dirs
-    ]
+    per_member_results = []
+    for member_dir in member_dirs:
+        one_pattern = os.path.join(member_dir, "files/D0_incl_LHAPDF_An0n_Pb_y*.dat")
+        per_member_results.append(load_results(one_pattern))
 
     band = {}
     for y in per_member_results[0]:
-        pt_values = sorted(pt for pt, _ in per_member_results[0][y])
+        pt_values = []
+        for pair in per_member_results[0][y]:
+            pt_values.append(pair[0])
+        pt_values.sort()
 
         cross_sections_by_pt = []
         for pt in pt_values:
@@ -136,8 +145,12 @@ def load_lhapdf_band(member_dir_pattern):
                 values.append(points[pt])
             cross_sections_by_pt.append(values)
 
-        means = [statistics.mean(values) for values in cross_sections_by_pt]
-        stds = [statistics.pstdev(values) for values in cross_sections_by_pt]
+        means = []
+        stds = []
+        for values in cross_sections_by_pt:
+            means.append(statistics.mean(values))
+            stds.append(statistics.pstdev(values))
+
         band[y] = (pt_values, means, stds)
 
     return band
@@ -148,40 +161,60 @@ def main():
     results_no_g1 = load_results("files/D0_incl_KniehlKramer_An0n_Pb_y*.dat")
     results_bcfy = load_results("files/D0_incl_BCFY_An0n_Pb_y*.dat")
     lhapdf_band = load_lhapdf_band("files/lhapdf/member_*")
-    results_lhapdf = None if lhapdf_band else load_results("files/D0_incl_LHAPDF_An0n_Pb_y*.dat")
+    if lhapdf_band:
+        results_lhapdf = None
+    else:
+        results_lhapdf = load_results("files/D0_incl_LHAPDF_An0n_Pb_y*.dat")
 
-    #Plot the results for each rapidity y
+    # Plot the results for each rapidity y
 
     plt.figure(figsize=(7, 5))
 
     color_cycle = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-    colors = {
-        y: color_cycle[i % len(color_cycle)]
-        for i, y in enumerate(sorted(y for y in results_g1 if y <= 2.0))
-    }
+
+    # pick one color per y value (only for y <= 2.0, that's all we plot)
+    y_values_to_plot = []
+    for y in results_g1:
+        if y <= 2.0:
+            y_values_to_plot.append(y)
+    y_values_to_plot.sort()
+
+    colors = {}
+    for i in range(len(y_values_to_plot)):
+        y = y_values_to_plot[i]
+        colors[y] = color_cycle[i % len(color_cycle)]
 
     for y in sorted(results_g1):
         if y > 2.0:
             continue
-        points = sorted(results_g1[y], key=lambda pair: pair[0])
-        pt_values = [pair[0] for pair in points]
-        cross_section_values = [pair[1] for pair in points]
-        plt.plot(pt_values, cross_section_values, color=colors[y], linestyle="-", label=f"y={y}")
+        points = sorted(results_g1[y])
+        pt_values = []
+        cross_section_values = []
+        for point in points:
+            pt_values.append(point[0])
+            cross_section_values.append(point[1])
+        plt.plot(pt_values, cross_section_values, color=colors[y], linestyle="-", label="y=" + str(y))
 
     for y in sorted(results_no_g1):
         if y > 2.0:
             continue
-        points = sorted(results_no_g1[y], key=lambda pair: pair[0])
-        pt_values = [pair[0] for pair in points]
-        cross_section_values = [pair[1] for pair in points]
+        points = sorted(results_no_g1[y])
+        pt_values = []
+        cross_section_values = []
+        for point in points:
+            pt_values.append(point[0])
+            cross_section_values.append(point[1])
         plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle="--")
 
     for y in sorted(results_bcfy):
         if y > 2.0:
             continue
-        points = sorted(results_bcfy[y], key=lambda pair: pair[0])
-        pt_values = [pair[0] for pair in points]
-        cross_section_values = [pair[1] for pair in points]
+        points = sorted(results_bcfy[y])
+        pt_values = []
+        cross_section_values = []
+        for point in points:
+            pt_values.append(point[0])
+            cross_section_values.append(point[1])
         plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle=":")
 
     if lhapdf_band:
@@ -190,17 +223,28 @@ def main():
                 continue
             pt_values, means, stds = lhapdf_band[y]
             color = colors.get(y)
-            lower = [max(mean - std, 1e-12) for mean, std in zip(means, stds)]
-            upper = [mean + std for mean, std in zip(means, stds)]
+            lower = []
+            upper = []
+            for i in range(len(means)):
+                mean = means[i]
+                std = stds[i]
+                lower_value = mean - std
+                if lower_value < 1e-12:
+                    lower_value = 1e-12
+                lower.append(lower_value)
+                upper.append(mean + std)
             plt.fill_between(pt_values, lower, upper, color=color, alpha=0.2, linewidth=0)
             plt.plot(pt_values, means, color=color, linestyle="-.")
     else:
         for y in sorted(results_lhapdf):
             if y > 2.0:
                 continue
-            points = sorted(results_lhapdf[y], key=lambda pair: pair[0])
-            pt_values = [pair[0] for pair in points]
-            cross_section_values = [pair[1] for pair in points]
+            points = sorted(results_lhapdf[y])
+            pt_values = []
+            cross_section_values = []
+            for point in points:
+                pt_values.append(point[0])
+                cross_section_values.append(point[1])
             plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle="-.")
 
     plt.yscale("log")
@@ -210,14 +254,17 @@ def main():
 
     y_legend = plt.legend(loc="upper right")
     plt.gca().add_artist(y_legend)
+
+    if lhapdf_band:
+        lhapdf_legend_text = "LHAPDF (mean +/- std over replicas)"
+    else:
+        lhapdf_legend_text = "LHAPDF (member 0, no errors)"
+
     style_handles = [
         Line2D([0], [0], color="black", linestyle="-", label="KniehlKramer, G1"),
         Line2D([0], [0], color="black", linestyle="--", label="KniehlKramer, no G1"),
         Line2D([0], [0], color="black", linestyle=":", label="BCFY"),
-        Line2D(
-            [0], [0], color="black", linestyle="-.",
-            label="LHAPDF (mean +/- std over replicas)" if lhapdf_band else "LHAPDF (member 0, no errors)",
-        ),
+        Line2D([0], [0], color="black", linestyle="-.", label=lhapdf_legend_text),
     ]
     plt.legend(handles=style_handles, loc="lower left")
 
@@ -227,4 +274,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

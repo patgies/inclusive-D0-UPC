@@ -78,6 +78,17 @@ int main(int argc, char* argv[])
         }
     }
 
+    // Transverse mass of the observed D0, used as the LHAPDF fragmentation
+    // scale below (Q = scale_factor * mt0) as well as for xbj and qpmin
+    // further down.
+    double mt0 = sqrt(param.pD0*param.pD0 + param.m2);
+
+    // Scale-variation knob: Q = scale_factor * mt0. Defaults to 1.0 (central
+    // scale); set to 0.5 or 2.0 to get the conventional up/down scale
+    // envelope on top of the LHAPDF replica (PDF-fit) uncertainty.
+    double scale_factor = getenv("SCALE_FACTOR") ? StrToReal(getenv("SCALE_FACTOR")) : 1.0;
+    double frag_scale = scale_factor * mt0;
+
     // Grid file for FragmentationType::LHAPDF: member 0 (central value) of an
     // LHAPDF lhagrid1-format fragmentation function set. Override with LHAPDF_FILE.
     string lhapdf_file = getenv("LHAPDF_FILE")
@@ -85,7 +96,7 @@ int main(int argc, char* argv[])
         : "data/prompt-D0-1-109/prompt-D0-1-109_0000.dat";
     const int lhapdf_charm_flavor = 4;  // PDG id for the charm quark
     if (param.frag_type == FragmentationType::LHAPDF) {
-        param.D_frag_interp = MakeLHAPDFZInterpolator(lhapdf_file, lhapdf_charm_flavor, param.m);
+        param.D_frag_interp = MakeLHAPDFZInterpolator(lhapdf_file, lhapdf_charm_flavor, frag_scale);
     }
     param.zmin = 0.05;
     param.zmax = 1.0;
@@ -103,8 +114,6 @@ int main(int argc, char* argv[])
     param.lmax    = 50.0;
     param.calls   = 2e5;
 
-    double mt0 = sqrt(param.pD0*param.pD0 + param.m2);
-
     init_workspace_fourier(1000);
     set_fourier_precision(1.0e-6, 1.0e-6);
 
@@ -114,7 +123,7 @@ int main(int argc, char* argv[])
             cout << "Kniehl & Kramer (N=" << param.N_kk << ", eps=" << param.eps_kk << ")";
             break;
         case FragmentationType::LHAPDF:
-            cout << "LHAPDF (" << lhapdf_file << ", member 0, Q=" << param.m << ")";
+            cout << "LHAPDF (" << lhapdf_file << ", member 0, Q=" << scale_factor << "*mt0=" << frag_scale << ")";
             break;
         case FragmentationType::BCFY:
         default:

@@ -22,6 +22,8 @@ CHANNEL=${CHANNEL:-An0n}
 export CHANNEL
 FRAG_TYPE=${FRAG_TYPE:-KniehlKramer}
 export FRAG_TYPE
+SCALE_FACTOR=${SCALE_FACTOR:-1.0}
+export SCALE_FACTOR
 
 mkdir -p "$OUTDIR/files"
 tmpdir=$(mktemp -d)
