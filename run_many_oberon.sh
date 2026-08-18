@@ -22,7 +22,8 @@ set -euo pipefail
 # src/CMakeLists.txt), so the compute node needs the same toolchain module
 # loaded as the login/build node -- otherwise its default /lib64/libstdc++.so.6
 # is too old (missing e.g. GLIBCXX_3.4.32) and the binary fails to even start.
-module load GCCcore/13.3.0
+
+
 
 OUTDIR=${OUTDIR:-$PWD/out}
 # Leave 2 cores free by default instead of claiming the whole box -- override

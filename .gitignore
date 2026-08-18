@@ -3,6 +3,7 @@ build/
 #files/
 *.o
 #run_many_oberon.sh
+__pycache__/
 CMakeCache.txt
 CMakeFiles/
 FragFunc/

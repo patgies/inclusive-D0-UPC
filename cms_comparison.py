@@ -7,6 +7,7 @@ CMS data comes from HEPData (doi:10.17182/hepdata.156822).
 """
 import csv
 import glob
+import os
 import re
 
 import numpy as np
@@ -22,7 +23,7 @@ from cross_section import (
     pi,
 )
 
-# make the plot look nicer / more like a physics paper
+# make the plot look nicer 
 plt.rcParams.update({
     "text.usetex": True,
     "font.family": "serif",
@@ -183,7 +184,7 @@ def compute_theory_points(pattern):
 
 def compute_lhapdf_scale_theory_points():
     # LHAPDF's error bars come from changing the factorization scale Q
-    # up and down (instead of using the 101 replicas). We need 3 runs:
+    # (instead of using the 101 replicas). We need 3 runs:
     # the normal one (Q = mt0) and the two "out/lhapdf_scale" ones
     # (Q = mt0/2 and Q = mt0*2). If those two haven't been produced
     # yet, we just don't draw the error bars.
@@ -219,6 +220,71 @@ def compute_lhapdf_scale_theory_points():
             highest = max(low_value, high_value, central)
 
             y_points.append((y_lo, y_hi, central, lowest, highest))
+        out.append((pt_lo, pt_hi, y_points))
+
+    return out
+
+
+def compute_lhapdf_replica_theory_points():
+    # LHAPDF's other source of uncertainty: the 100 MC fit replicas (as
+    # opposed to the scale variation above, which always uses the central
+    # member). member_0000 is the central fit; members 0001-0100 are the
+    # replicas the 68% band is built from. These come from
+    # run_lhapdf_members.sh; if it hasn't been run yet, we skip this band.
+    member_dirs = sorted(glob.glob("files/lhapdf/member_*"))
+    if len(member_dirs) < 2:
+        return None
+
+    central_theory = compute_theory_points(
+        os.path.join(member_dirs[0], "files/D0_incl_LHAPDF_An0n_Pb_y*.dat")
+    )
+    replica_theory = []
+    for member_dir in member_dirs[1:]:
+        pattern = os.path.join(member_dir, "files/D0_incl_LHAPDF_An0n_Pb_y*.dat")
+        replica_theory.append(compute_theory_points(pattern))
+
+    out = []
+    for i in range(len(PT_BINS_Y_BINS)):
+        pt_lo, pt_hi, y_bins = PT_BINS_Y_BINS[i]
+        y_points = []
+        for j in range(len(y_bins)):
+            y_lo, y_hi = y_bins[j]
+
+            central = central_theory[i][2][j][2]
+            values = []
+            for rep in replica_theory:
+                values.append(rep[i][2][j][2])
+            lo, hi = np.percentile(values, [16, 84])
+
+            y_points.append((y_lo, y_hi, central, lo, hi))
+        out.append((pt_lo, pt_hi, y_points))
+
+    return out
+
+
+def compute_lhapdf_combined_theory_points():
+    # The scale variation and the replica (fit) uncertainty are two
+    # independent sources, so we combine them in quadrature rather than
+    # showing just one of them and understating the total.
+    scale = compute_lhapdf_scale_theory_points()
+    replicas = compute_lhapdf_replica_theory_points()
+    if scale is None or replicas is None:
+        return None
+
+    out = []
+    for i in range(len(PT_BINS_Y_BINS)):
+        pt_lo, pt_hi, y_bins = PT_BINS_Y_BINS[i]
+        y_points = []
+        for j in range(len(y_bins)):
+            y_lo, y_hi = y_bins[j]
+
+            _, _, central, lo_scale, hi_scale = scale[i][2][j]
+            _, _, _, lo_repl, hi_repl = replicas[i][2][j]
+
+            lo_total = central - ((central - lo_scale) ** 2 + (central - lo_repl) ** 2) ** 0.5
+            hi_total = central + ((hi_scale - central) ** 2 + (hi_repl - central) ** 2) ** 0.5
+
+            y_points.append((y_lo, y_hi, central, lo_total, hi_total))
         out.append((pt_lo, pt_hi, y_points))
 
     return out
@@ -273,17 +339,20 @@ def main():
                 values.append(avg)
             plt.plot(y_centers, values, marker, color=color, markerfacecolor="none")
 
-    # draw the LHAPDF scale-variation error bars, if we have them
-    lhapdf_scale = compute_lhapdf_scale_theory_points()
-    if lhapdf_scale is not None:
-        for pt_lo, pt_hi, y_points in lhapdf_scale:
+    # draw the LHAPDF uncertainty band -- scale variation and fit/replica
+    # uncertainty combined in quadrature -- if we have it (same box shape
+    # as the CMS data, but filled with a faded color so the two don't get
+    # mixed up when they land in the same spot)
+    lhapdf_uncertainty = compute_lhapdf_combined_theory_points()
+    if lhapdf_uncertainty is not None:
+        for pt_lo, pt_hi, y_points in lhapdf_uncertainty:
             color = colors[pt_lo]
             for y_lo, y_hi, central, low, high in y_points:
-                x_center = 0.5 * (y_lo + y_hi)
-                plt.errorbar(
-                    [x_center], [central], yerr=[[central - low], [high - central]],
-                    fmt="none", ecolor=color, elinewidth=1.2, capsize=4,
+                box = plt.Rectangle(
+                    (y_lo, low), y_hi - y_lo, high - low,
+                    facecolor=color, edgecolor="none", alpha=0.3,
                 )
+                plt.gca().add_patch(box)
 
     # legend for the theory schemes
     handles = []
@@ -298,7 +367,7 @@ def main():
     )
     plt.gca().add_artist(scheme_legend)
 
-    # legend for the CMS pT bins (colors)
+    # legend for the CMS pT bins 
     style_handles = []
     for pt_lo in colors:
         patch = Patch(fill=False, edgecolor=colors[pt_lo], linewidth=1, label=labels[pt_lo])
@@ -308,12 +377,13 @@ def main():
     plt.yscale("log")
     plt.xlabel(r"$y_D$")
     plt.ylabel(r"$d\sigma/dk_{D\perp}dy_D$ [mb/GeV]")
-    plt.title(r"Pb + Pb $\to$ D$^0$ + X  ($\sqrt{s}=5.36$ TeV)")
+    plt.title(r"Pb + Pb $\to$ D$^0$ + X  (An0n, $\sqrt{s}=5.36$ TeV)")
 
-    if lhapdf_scale is not None:
+    if lhapdf_uncertainty is not None:
         plt.figtext(
             0.01, -0.05,
-            r"LHAPDF at $Q^2=m_T^2=m_c^2+k_{D\perp}^2$, factorization-scale variation, $Q=0.5$-$2\times m_T$.",
+            r"LHAPDF band: factorization-scale variation ($Q=0.5$-$2\times m_T$, $m_T^2=m_c^2+k_{D\perp}^2$) "
+            r"and fit (replica) uncertainty, combined in quadrature.",
             fontsize=7, color="dimgray", ha="left",
         )
 
