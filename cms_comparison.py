@@ -231,6 +231,16 @@ def compute_lhapdf_replica_theory_points():
     # member). member_0000 is the central fit; members 0001-0100 are the
     # replicas the 68% band is built from. These come from
     # run_lhapdf_members.sh; if it hasn't been run yet, we skip this band.
+    #
+    # NOTE: this member sweep was produced with a fixed Q=1.5 GeV for every
+    # pD0, while the "real" central prediction (and the scale-variation
+    # study above) use Q=mt0(pD0), which grows with pD0 -- so member_0000's
+    # absolute value disagrees with the real central by up to ~60% at high
+    # pD0, for reasons that have nothing to do with the fit uncertainty.
+    # To not let that scale mismatch leak in as fake fit uncertainty, we
+    # return the *fractional* replica spread (relative to member_0000)
+    # rather than absolute values; compute_lhapdf_combined_theory_points
+    # then re-applies that fraction on top of the real central value.
     member_dirs = sorted(glob.glob("files/lhapdf/member_*"))
     if len(member_dirs) < 2:
         return None
@@ -256,7 +266,7 @@ def compute_lhapdf_replica_theory_points():
                 values.append(rep[i][2][j][2])
             lo, hi = np.percentile(values, [16, 84])
 
-            y_points.append((y_lo, y_hi, central, lo, hi))
+            y_points.append((y_lo, y_hi, central, lo / central, hi / central))
         out.append((pt_lo, pt_hi, y_points))
 
     return out
@@ -279,7 +289,13 @@ def compute_lhapdf_combined_theory_points():
             y_lo, y_hi = y_bins[j]
 
             _, _, central, lo_scale, hi_scale = scale[i][2][j]
-            _, _, _, lo_repl, hi_repl = replicas[i][2][j]
+            # frac_lo/frac_hi are the replicas' fractional spread (see the
+            # note in compute_lhapdf_replica_theory_points); apply them to
+            # the real central value instead of using the replicas' own
+            # (differently-scaled) absolute central.
+            _, _, _, frac_lo, frac_hi = replicas[i][2][j]
+            lo_repl = central * frac_lo
+            hi_repl = central * frac_hi
 
             lo_total = central - ((central - lo_scale) ** 2 + (central - lo_repl) ** 2) ** 0.5
             hi_total = central + ((hi_scale - central) ** 2 + (hi_repl - central) ** 2) ** 0.5
