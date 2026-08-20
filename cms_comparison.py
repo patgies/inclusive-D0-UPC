@@ -230,17 +230,8 @@ def compute_lhapdf_replica_theory_points():
     # opposed to the scale variation above, which always uses the central
     # member). member_0000 is the central fit; members 0001-0100 are the
     # replicas the 68% band is built from. These come from
-    # run_lhapdf_members.sh; if it hasn't been run yet, we skip this band.
-    #
-    # NOTE: this member sweep was produced with a fixed Q=1.5 GeV for every
-    # pD0, while the "real" central prediction (and the scale-variation
-    # study above) use Q=mt0(pD0), which grows with pD0 -- so member_0000's
-    # absolute value disagrees with the real central by up to ~60% at high
-    # pD0, for reasons that have nothing to do with the fit uncertainty.
-    # To not let that scale mismatch leak in as fake fit uncertainty, we
-    # return the *fractional* replica spread (relative to member_0000)
-    # rather than absolute values; compute_lhapdf_combined_theory_points
-    # then re-applies that fraction on top of the real central value.
+    # run_lhapdf_members_oberon.sh; if it hasn't been run yet, we skip this
+    # band.
     member_dirs = sorted(glob.glob("files/lhapdf/member_*"))
     if len(member_dirs) < 2:
         return None
@@ -266,20 +257,74 @@ def compute_lhapdf_replica_theory_points():
                 values.append(rep[i][2][j][2])
             lo, hi = np.percentile(values, [16, 84])
 
-            y_points.append((y_lo, y_hi, central, lo / central, hi / central))
+            y_points.append((y_lo, y_hi, central, lo, hi))
         out.append((pt_lo, pt_hi, y_points))
 
     return out
 
 
-def compute_lhapdf_combined_theory_points():
-    # The scale variation and the replica (fit) uncertainty are two
-    # independent sources, so we combine them in quadrature rather than
-    # showing just one of them and understating the total.
+def compute_bk_posterior_theory_points(frag_type="LHAPDF"):
+    # Uncertainty source shared by every fragmentation scheme: 100 posterior
+    # samples of the BK initial-condition fit ("LOmvefit" -- Q_{s,0}^2, e_c,
+    # C^2, sigma0/2; see bk/posteriorsamples_100_LOmvefit.dat), each
+    # independently BK-evolved to its own dipole amplitude
+    # (data/Pb/bk_posterior/member_<NNNN>), with the fragmentation function
+    # held fixed at frag_type's central member/scale -- the opposite of
+    # compute_lhapdf_replica_theory_points, which varies the fragmentation
+    # function at fixed dipole. Comes from run_bk_posterior_members_oberon.sh
+    # (FRAG_TYPE=<frag_type> when it was run).
+    #
+    # Unlike the LHAPDF replica set, there is no reason posterior sample
+    # "member 0" should coincide with the real central (data/Pb/mve)
+    # dipole -- the 100 samples are independent draws from the fit
+    # posterior, not variations around a labeled central member. So instead
+    # of splitting off one member as "the" central value (as
+    # compute_lhapdf_replica_theory_points does), we take the *fractional*
+    # 16th/84th percentile spread of all 100 samples around their own
+    # median, to be re-applied to the real central value by whichever
+    # caller combines it in -- same reasoning as the fractional workaround
+    # used for the once-stale LHAPDF replica set.
+    member_dirs = sorted(glob.glob("data/Pb/bk_posterior/member_*"))
+    if len(member_dirs) < 2:
+        return None
+
+    member_theory = []
+    for member_dir in member_dirs:
+        pattern = os.path.join(member_dir, f"files/D0_incl_{frag_type}_An0n_Pb_y*.dat")
+        if len(glob.glob(pattern)) == 0:
+            return None
+        member_theory.append(compute_theory_points(pattern))
+
+    out = []
+    for i in range(len(PT_BINS_Y_BINS)):
+        pt_lo, pt_hi, y_bins = PT_BINS_Y_BINS[i]
+        y_points = []
+        for j in range(len(y_bins)):
+            y_lo, y_hi = y_bins[j]
+
+            values = []
+            for member in member_theory:
+                values.append(member[i][2][j][2])
+            median = np.median(values)
+            lo, hi = np.percentile(values, [16, 84])
+
+            y_points.append((y_lo, y_hi, median, lo / median, hi / median))
+        out.append((pt_lo, pt_hi, y_points))
+
+    return out
+
+
+def compute_combined_theory_points():
+    # Three independent LHAPDF-curve uncertainty sources: scale variation,
+    # fit (replica) uncertainty, and now the BK initial-condition
+    # (posterior-sample dipole) uncertainty. Combined in quadrature since
+    # each varies one thing (Q, the fragmentation-function fit, or the
+    # dipole amplitude) while holding the other two fixed.
     scale = compute_lhapdf_scale_theory_points()
     replicas = compute_lhapdf_replica_theory_points()
+    bk = compute_bk_posterior_theory_points("LHAPDF")
     if scale is None or replicas is None:
-        return None
+        return None, False
 
     out = []
     for i in range(len(PT_BINS_Y_BINS)):
@@ -289,28 +334,55 @@ def compute_lhapdf_combined_theory_points():
             y_lo, y_hi = y_bins[j]
 
             _, _, central, lo_scale, hi_scale = scale[i][2][j]
-            # frac_lo/frac_hi are the replicas' fractional spread (see the
-            # note in compute_lhapdf_replica_theory_points); apply them to
-            # the real central value instead of using the replicas' own
-            # (differently-scaled) absolute central.
-            _, _, _, frac_lo, frac_hi = replicas[i][2][j]
-            lo_repl = central * frac_lo
-            hi_repl = central * frac_hi
+            _, _, _, lo_repl, hi_repl = replicas[i][2][j]
 
-            lo_total = central - ((central - lo_scale) ** 2 + (central - lo_repl) ** 2) ** 0.5
-            hi_total = central + ((hi_scale - central) ** 2 + (hi_repl - central) ** 2) ** 0.5
+            lo_sq = (central - lo_scale) ** 2 + (central - lo_repl) ** 2
+            hi_sq = (hi_scale - central) ** 2 + (hi_repl - central) ** 2
 
-            y_points.append((y_lo, y_hi, central, lo_total, hi_total))
+            if bk is not None:
+                _, _, _, frac_lo_bk, frac_hi_bk = bk[i][2][j]
+                lo_bk = central * frac_lo_bk
+                hi_bk = central * frac_hi_bk
+                lo_sq += (central - lo_bk) ** 2
+                hi_sq += (hi_bk - central) ** 2
+
+            y_points.append((y_lo, y_hi, central, central - lo_sq ** 0.5, central + hi_sq ** 0.5))
+        out.append((pt_lo, pt_hi, y_points))
+
+    return out, bk is not None
+
+
+def compute_bk_only_theory_points(pattern, frag_type):
+    # BCFY and Kniehl-Kramer have no scale-variation or fit-replica study
+    # (they're fixed analytic forms, not a PDF/FF-fit with its own members)
+    # -- so the only uncertainty source available for them is the BK
+    # initial-condition (posterior-sample dipole) one, applied on top of
+    # that scheme's own central prediction.
+    bk = compute_bk_posterior_theory_points(frag_type)
+    if bk is None:
+        return None
+
+    central_theory = compute_theory_points(pattern)
+
+    out = []
+    for i in range(len(PT_BINS_Y_BINS)):
+        pt_lo, pt_hi, y_bins = PT_BINS_Y_BINS[i]
+        y_points = []
+        for j in range(len(y_bins)):
+            y_lo, y_hi, central = central_theory[i][2][j]
+            _, _, _, frac_lo, frac_hi = bk[i][2][j]
+            y_points.append((y_lo, y_hi, central, central * frac_lo, central * frac_hi))
         out.append((pt_lo, pt_hi, y_points))
 
     return out
 
 
-# list of (data file pattern, name to show in legend, marker shape, offset)
+# list of (data file pattern, name to show in legend, marker shape, offset,
+# FRAG_TYPE tag used to look up that scheme's BK-posterior sweep output)
 FRAG_SCHEMES = [
-    ("files/D0_incl_BCFY_An0n_Pb_y*.dat", "BCFY", "o", 0.06),
-    ("files/D0_incl_KniehlKramer_An0n_Pb_y*.dat", "Kniehl-Kramer", "x", -0.06),
-    ("files/D0_incl_LHAPDF_An0n_Pb_y*.dat", "LHAPDF", "+", -0.12),
+    ("files/D0_incl_BCFY_An0n_Pb_y*.dat", "BCFY", "o", 0.06, "BCFY"),
+    ("files/D0_incl_KniehlKramer_An0n_Pb_y*.dat", "Kniehl-Kramer", "x", -0.06, "KniehlKramer"),
+    ("files/D0_incl_LHAPDF_An0n_Pb_y*.dat", "HymnD", "+", -0.12, "LHAPDF"),
 ]
 
 
@@ -344,7 +416,7 @@ def main():
             plt.gca().add_patch(box)
 
     # draw a marker for each theory scheme
-    for pattern, frag_label, marker, dx in FRAG_SCHEMES:
+    for pattern, frag_label, marker, dx, frag_type in FRAG_SCHEMES:
         theory = compute_theory_points(pattern)
         for pt_lo, pt_hi, y_points in theory:
             color = colors[pt_lo]
@@ -355,13 +427,23 @@ def main():
                 values.append(avg)
             plt.plot(y_centers, values, marker, color=color, markerfacecolor="none")
 
-    # draw the LHAPDF uncertainty band -- scale variation and fit/replica
-    # uncertainty combined in quadrature -- if we have it (same box shape
-    # as the CMS data, but filled with a faded color so the two don't get
-    # mixed up when they land in the same spot)
-    lhapdf_uncertainty = compute_lhapdf_combined_theory_points()
-    if lhapdf_uncertainty is not None:
-        for pt_lo, pt_hi, y_points in lhapdf_uncertainty:
+    # draw each scheme's uncertainty band, if we have one -- same faded-box
+    # style for all of them (same color as the CMS data box in that pT
+    # bin). HymnD (LHAPDF) gets scale variation + fit/replica + BK
+    # initial-condition combined in quadrature; BCFY and Kniehl-Kramer have
+    # no scale/replica study of their own, so they only get the
+    # BK-initial-condition band, on top of their own central prediction.
+    bands_drawn = {}
+    for pattern, frag_label, marker, dx, frag_type in FRAG_SCHEMES:
+        if frag_type == "LHAPDF":
+            band, bk_included = compute_combined_theory_points()
+        else:
+            band = compute_bk_only_theory_points(pattern, frag_type)
+            bk_included = band is not None
+        if band is None:
+            continue
+        bands_drawn[frag_type] = bk_included
+        for pt_lo, pt_hi, y_points in band:
             color = colors[pt_lo]
             for y_lo, y_hi, central, low, high in y_points:
                 box = plt.Rectangle(
@@ -372,7 +454,7 @@ def main():
 
     # legend for the theory schemes
     handles = []
-    for pattern, frag_label, marker, dx in FRAG_SCHEMES:
+    for pattern, frag_label, marker, dx, frag_type in FRAG_SCHEMES:
         one_handle = plt.Line2D(
             [0], [0], color="black", marker=marker, linestyle="",
             markerfacecolor="none", label=frag_label,
@@ -395,13 +477,34 @@ def main():
     plt.ylabel(r"$d\sigma/dk_{D\perp}dy_D$ [mb/GeV]")
     plt.title(r"Pb + Pb $\to$ D$^0$ + X  (An0n, $\sqrt{s}=5.36$ TeV)")
 
-    if lhapdf_uncertainty is not None:
-        plt.figtext(
-            0.01, -0.05,
-            r"LHAPDF band: factorization-scale variation ($Q=0.5$-$2\times m_T$, $m_T^2=m_c^2+k_{D\perp}^2$) "
-            r"and fit (replica) uncertainty, combined in quadrature.",
-            fontsize=7, color="dimgray", ha="left",
+    # Figure caption, split across lines rather than one long figtext -- a
+    # single very long line forces bbox_inches="tight" to widen the whole
+    # saved canvas to fit it, shrinking the plot itself.
+    caption_lines = []
+    if "LHAPDF" in bands_drawn:
+        caption_lines.append(
+            r"\textbf{HymnD band.} Combines, in quadrature: factorization-scale "
+            r"variation ($Q=0.5$-$2\times m_T$, $m_T^2=m_c^2+k_{D\perp}^2$);"
         )
+        caption_lines.append(r"fit (replica) uncertainty from the 100 LHAPDF fit replicas")
+        if bands_drawn["LHAPDF"]:
+            caption_lines[-1] += r";"
+            caption_lines.append(
+                r"and BK initial-condition uncertainty from a 100-sample dipole-amplitude posterior."
+            )
+        else:
+            caption_lines[-1] += r"."
+
+    other_bk_only = [ft for ft in ("BCFY", "KniehlKramer") if bands_drawn.get(ft)]
+    if other_bk_only:
+        caption_lines.append(
+            r"\textbf{" + "/".join(other_bk_only) + r" band(s).} BK initial-condition "
+            r"uncertainty (100-sample dipole-amplitude posterior) only --"
+        )
+        caption_lines.append(r"these schemes have no scale/replica study of their own.")
+
+    for i, line in enumerate(caption_lines):
+        plt.figtext(0.01, -0.05 - 0.03 * i, line, fontsize=7, color="dimgray", ha="left")
 
     plt.xlim(-2.4, 2.4)
     plt.ylim(1e-4, 1e1)

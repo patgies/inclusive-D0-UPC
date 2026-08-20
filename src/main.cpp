@@ -48,6 +48,15 @@ int main(int argc, char* argv[])
     inst.SetOutOfRangeErrors(false);
     inst.SetInterpolationMethod(LINEAR_LINEAR);
 
+    // Some BK solver output (e.g. the rcbk-produced posterior-sample dipole
+    // files) leaves x0 out of the header, which DataFile reads as an
+    // "invalid x0" and resets to 0 -- fix that up here rather than editing
+    // the data files. Only takes effect if explicitly requested, so it's a
+    // no-op for every other dataset's already-correct header value.
+    if (getenv("DIPOLE_X0")) {
+        inst.SetX0(StrToReal(getenv("DIPOLE_X0")));
+    }
+
     gsl_set_error_handler_off();
 
     load_data_and_initialize("./data/Gamma_AA.dat");
