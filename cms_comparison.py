@@ -483,12 +483,12 @@ def main():
     caption_lines = []
     if "LHAPDF" in bands_drawn:
         caption_lines.append(
-            r"\textbf{HymnD band.} Combines, in quadrature: factorization-scale "
-            r"variation ($Q=0.5$-$2\times m_T$, $m_T^2=m_c^2+k_{D\perp}^2$);"
+            r"\textbf{HymnD band.} Combines in quadrature: factorization-scale "
+            r"variation ($Q=0.5$-$2\times m_T$, $m_T^2=m_c^2+k_{D\perp}^2$),"
         )
-        caption_lines.append(r"fit (replica) uncertainty from the 100 LHAPDF fit replicas")
+        caption_lines.append(r"fit (replica) uncertainty from the 100 HymnD fit replicas")
         if bands_drawn["LHAPDF"]:
-            caption_lines[-1] += r";"
+            caption_lines[-1] += r","
             caption_lines.append(
                 r"and BK initial-condition uncertainty from a 100-sample dipole-amplitude posterior."
             )
@@ -498,10 +498,10 @@ def main():
     other_bk_only = [ft for ft in ("BCFY", "KniehlKramer") if bands_drawn.get(ft)]
     if other_bk_only:
         caption_lines.append(
-            r"\textbf{" + "/".join(other_bk_only) + r" band(s).} BK initial-condition "
-            r"uncertainty (100-sample dipole-amplitude posterior) only --"
+            r"\textbf{" + "/".join(other_bk_only) + r" bands.} BK initial-condition "
+            r"uncertainty (100-sample dipole-amplitude posterior) only,"
         )
-        caption_lines.append(r"these schemes have no scale/replica study of their own.")
+        caption_lines.append(r"these schemes have no scale/replica study.")
 
     for i, line in enumerate(caption_lines):
         plt.figtext(0.01, -0.05 - 0.03 * i, line, fontsize=7, color="dimgray", ha="left")
