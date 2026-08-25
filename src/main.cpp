@@ -97,6 +97,11 @@ int main(int argc, char* argv[])
     // envelope on top of the LHAPDF replica (PDF-fit) uncertainty.
     double scale_factor = getenv("SCALE_FACTOR") ? StrToReal(getenv("SCALE_FACTOR")) : 1.0;
     double frag_scale = scale_factor * mt0;
+    // Below the charm mass, the fragmentation function is undefined (the
+    // LHAPDF grid's charm production threshold): use the charm mass itself
+    // as a floor rather than letting a small scale_factor push Q below it
+    // (matches diffractive-D0-UPC/src/main.cpp's convention).
+    if (frag_scale < param.m) frag_scale = param.m;
 
     // Grid file for FragmentationType::LHAPDF: member 0 (central value) of an
     // LHAPDF lhagrid1-format fragmentation function set. Override with LHAPDF_FILE.

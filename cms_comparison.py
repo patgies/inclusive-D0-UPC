@@ -321,9 +321,11 @@ def compute_combined_theory_points():
     # each varies one thing (Q, the fragmentation-function fit, or the
     # dipole amplitude) while holding the other two fixed.
     scale = compute_lhapdf_scale_theory_points()
-    replicas = compute_lhapdf_replica_theory_points()
-    bk = compute_bk_posterior_theory_points("LHAPDF")
-    if scale is None or replicas is None:
+    # replicas = compute_lhapdf_replica_theory_points()
+    replicas = None
+    # bk = compute_bk_posterior_theory_points("LHAPDF")
+    bk = None
+    if scale is None:
         return None, False
 
     out = []
@@ -334,10 +336,14 @@ def compute_combined_theory_points():
             y_lo, y_hi = y_bins[j]
 
             _, _, central, lo_scale, hi_scale = scale[i][2][j]
-            _, _, _, lo_repl, hi_repl = replicas[i][2][j]
 
-            lo_sq = (central - lo_scale) ** 2 + (central - lo_repl) ** 2
-            hi_sq = (hi_scale - central) ** 2 + (hi_repl - central) ** 2
+            lo_sq = (central - lo_scale) ** 2
+            hi_sq = (hi_scale - central) ** 2
+
+            if replicas is not None:
+                _, _, _, lo_repl, hi_repl = replicas[i][2][j]
+                lo_sq += (central - lo_repl) ** 2
+                hi_sq += (hi_repl - central) ** 2
 
             if bk is not None:
                 _, _, _, frac_lo_bk, frac_hi_bk = bk[i][2][j]
@@ -378,11 +384,18 @@ def compute_bk_only_theory_points(pattern, frag_type):
 
 
 # list of (data file pattern, name to show in legend, marker shape, offset,
-# FRAG_TYPE tag used to look up that scheme's BK-posterior sweep output)
+# FRAG_TYPE tag used to look up that scheme's BK-posterior sweep output,
+# marker fill style) -- BCFY: empty hexagon; Kniehl-Kramer: empty triangle;
+# HymnD: solid point, distinguished by its error bar (the only scheme with
+# a computed uncertainty band right now).
 FRAG_SCHEMES = [
-    ("files/D0_incl_BCFY_An0n_Pb_y*.dat", "BCFY", "o", 0.06, "BCFY"),
-    ("files/D0_incl_KniehlKramer_An0n_Pb_y*.dat", "Kniehl-Kramer", "x", -0.06, "KniehlKramer"),
-    ("files/D0_incl_LHAPDF_An0n_Pb_y*.dat", "HymnD", "+", -0.12, "LHAPDF"),
+    ("files/D0_incl_BCFY_An0n_Pb_y*.dat", "BCFY", "h", 0.06, "BCFY", "empty"),
+    ("files/D0_incl_KniehlKramer_An0n_Pb_y*.dat", "Kniehl-Kramer", "^", -0.06, "KniehlKramer", "empty"),
+    (
+        "files/D0_incl_LHAPDF_An0n_Pb_y*.dat",
+        r"HymnD ($Q=0.5$-$2\times \sqrt{m_c^2+k_{D\perp}^2}$)",
+        ".", -0.12, "LHAPDF", "solid",
+    ),
 ]
 
 
@@ -416,7 +429,7 @@ def main():
             plt.gca().add_patch(box)
 
     # draw a marker for each theory scheme
-    for pattern, frag_label, marker, dx, frag_type in FRAG_SCHEMES:
+    for pattern, frag_label, marker, dx, frag_type, style in FRAG_SCHEMES:
         theory = compute_theory_points(pattern)
         for pt_lo, pt_hi, y_points in theory:
             color = colors[pt_lo]
@@ -425,52 +438,88 @@ def main():
             for y_lo, y_hi, avg in y_points:
                 y_centers.append(0.5 * (y_lo + y_hi))
                 values.append(avg)
-            plt.plot(y_centers, values, marker, color=color, markerfacecolor="none")
+            if style == "hatched":
+                # plain plt.plot markers can't carry a hatch, so these go
+                # through scatter (a PathCollection) instead, whose
+                # face/edge/hatch are set separately.
+                pc = plt.scatter(
+                    y_centers, values, marker=marker, s=36,
+                    facecolor=color, edgecolor="black", linewidth=0.8,
+                )
+                pc.set_hatch("///")
+            else:
+                facecolor = color if style == "solid" else "none"
+                plt.plot(y_centers, values, marker, color=color, markerfacecolor=facecolor)
 
-    # draw each scheme's uncertainty band, if we have one -- same faded-box
-    # style for all of them (same color as the CMS data box in that pT
-    # bin). HymnD (LHAPDF) gets scale variation + fit/replica + BK
+    # draw each scheme's uncertainty band, if we have one -- a classic
+    # error bar (vertical whisker + horizontal caps) centered on the bin
+    # midpoint, rather than a box spanning the whole bin width, so it
+    # doesn't compete visually with the CMS data box in the same spot.
+    # HymnD (LHAPDF) gets scale variation + fit/replica + BK
     # initial-condition combined in quadrature; BCFY and Kniehl-Kramer have
     # no scale/replica study of their own, so they only get the
     # BK-initial-condition band, on top of their own central prediction.
     bands_drawn = {}
-    for pattern, frag_label, marker, dx, frag_type in FRAG_SCHEMES:
+    for pattern, frag_label, marker, dx, frag_type, style in FRAG_SCHEMES:
         if frag_type == "LHAPDF":
             band, bk_included = compute_combined_theory_points()
         else:
-            band = compute_bk_only_theory_points(pattern, frag_type)
-            bk_included = band is not None
+            # band = compute_bk_only_theory_points(pattern, frag_type)
+            # bk_included = band is not None
+            band = None
         if band is None:
             continue
         bands_drawn[frag_type] = bk_included
         for pt_lo, pt_hi, y_points in band:
             color = colors[pt_lo]
             for y_lo, y_hi, central, low, high in y_points:
-                box = plt.Rectangle(
-                    (y_lo, low), y_hi - y_lo, high - low,
-                    facecolor=color, edgecolor="none", alpha=0.3,
+                y_center = 0.5 * (y_lo + y_hi)
+                plt.errorbar(
+                    [y_center], [central], yerr=[[central - low], [high - central]],
+                    fmt="none", ecolor=color, elinewidth=1.2, capsize=4,
                 )
-                plt.gca().add_patch(box)
 
     # legend for the theory schemes
     handles = []
-    for pattern, frag_label, marker, dx, frag_type in FRAG_SCHEMES:
-        one_handle = plt.Line2D(
-            [0], [0], color="black", marker=marker, linestyle="",
-            markerfacecolor="none", label=frag_label,
-        )
+    for pattern, frag_label, marker, dx, frag_type, style in FRAG_SCHEMES:
+        if style == "hatched":
+            # match the hatched scatter markers above -- a Line2D proxy
+            # can't show a hatch, so use a real (off-plot) scatter handle.
+            one_handle = plt.scatter(
+                [], [], marker=marker, s=36,
+                facecolor="black", edgecolor="black", linewidth=0.8, label=frag_label,
+            )
+            one_handle.set_hatch("///")
+        else:
+            one_handle = plt.Line2D(
+                [0], [0], color="black", marker=marker, linestyle="",
+                markerfacecolor="black" if style == "solid" else "none", label=frag_label,
+            )
         handles.append(one_handle)
+    # CMS data and Fragmentation function legends sit side by side (both
+    # anchored bottom-left) with a thin vertical rule between them, instead
+    # of occupying opposite corners.
     scheme_legend = plt.legend(
-        handles=handles, loc="lower right", title="Fragmentation scheme", framealpha=1,
+        handles=handles, title="Fragmentation function", frameon=False,
+        loc="lower left", bbox_to_anchor=(0.305, -0.01), handletextpad=0.3,
     )
     plt.gca().add_artist(scheme_legend)
 
-    # legend for the CMS pT bins 
+    # legend for the CMS pT bins
     style_handles = []
     for pt_lo in colors:
         patch = Patch(fill=False, edgecolor=colors[pt_lo], linewidth=1, label=labels[pt_lo])
         style_handles.append(patch)
-    plt.legend(handles=style_handles, loc="lower left", title="CMS data", framealpha=1)
+    plt.legend(
+        handles=style_handles, title="CMS data", frameon=False,
+        loc="lower left", bbox_to_anchor=(0.0, 0.0),
+    )
+
+    separator = plt.Line2D(
+        [0.315, 0.315], [0.02, 0.20], transform=plt.gca().transAxes,
+        color="gray", linewidth=0.8,
+    )
+    plt.gca().add_line(separator)
 
     plt.yscale("log")
     plt.xlabel(r"$y_D$")
@@ -484,7 +533,7 @@ def main():
     if "LHAPDF" in bands_drawn:
         caption_lines.append(
             r"\textbf{HymnD band.} Combines in quadrature: factorization-scale "
-            r"variation ($Q=0.5$-$2\times m_T$, $m_T^2=m_c^2+k_{D\perp}^2$),"
+            r"variation ($Q=0.5$-$2\times \sqrt{m_c^2+k_{D\perp}^2}$),"
         )
         caption_lines.append(r"fit (replica) uncertainty from the 100 HymnD fit replicas")
         if bands_drawn["LHAPDF"]:
@@ -503,8 +552,8 @@ def main():
         )
         caption_lines.append(r"these schemes have no scale/replica study.")
 
-    for i, line in enumerate(caption_lines):
-        plt.figtext(0.01, -0.05 - 0.03 * i, line, fontsize=7, color="dimgray", ha="left")
+    # for i, line in enumerate(caption_lines):
+    #     plt.figtext(0.01, -0.05 - 0.03 * i, line, fontsize=7, color="dimgray", ha="left")
 
     plt.xlim(-2.4, 2.4)
     plt.ylim(1e-4, 1e1)
