@@ -26,6 +26,12 @@ static double get_GammaAA(double b)
     return value;
 }
 
+// Photon flux in the equivalent-photon approximation. The target spatial
+// resolution is included through the impact-parameter dependence of the
+// nuclear profile embedded in gamma_aa(b), following the discussion in
+// K. J. Eskola, V. Guzey, I. Helenius, P. Paakkinen, and H. Paukkunen,
+// "Spatial resolution of dijet photoproduction in near-encounter
+// ultraperipheral nuclear collisions," Phys. Rev. C 110, 054906 (2024).
 double flux_density(double qp, double b, void* p)
 {
     parameters* par = (parameters*)p;

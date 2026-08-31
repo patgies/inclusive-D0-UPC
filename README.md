@@ -1,6 +1,6 @@
 # Inclusive D0 photoproduction
 
-This project computes the inclusive D0 photoproduction cross section `dσ / (dy d p_D0)` in ultraperipheral collisions (UPCs) in the CGC framework.
+This project computes the inclusive D0 photoproduction cross section `dσ / (dy dp_D0)` in ultraperipheral collisions (UPCs) in the CGC framework.
 
 The code supports different UPC channels and fragmentation functions, and it can be used for proton and nuclear targets.
 
@@ -92,17 +92,9 @@ The final CMS-style theory band keeps the dominant factorization-scale variation
 
 ## Differential cross section and normalization
 
-The raw output from the large runs is per impact parameter `b`. To obtain a final `p_D0` spectrum, one still needs to integrate over `b` (for example by Simpson's rule, weighted by `2π b`).
+The raw output from the large runs is per impact parameter `b`. To obtain a final `p_D0` spectrum, one still needs to integrate over `b` (for example by Simpson's rule, weighted by `2πb`).
 
-For a proton target, the impact-parameter integral is effectively absorbed into the proton normalization. The code includes the standard overall prefactor associated with the photon flux and the charm charge.
-
-The final observable is built from:
-
-- photon flux,
-- dipole amplitude,
-- fragmentation function,
-- impact-parameter integration,
-- and the chosen UPC channel.
+For a proton target, the impact-parameter integral is effectively absorbed into the proton normalization `16.36` mb from the MVe dipole parametrization from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole). The code includes the standard overall prefactor associated with the photon flux. In the nuclear case, the photon flux includes the spatial resolution of the target through the impact-parameter dependence of the nuclear profile, as discussed in K. J. Eskola, V. Guzey, I. Helenius, P. Paakkinen, and H. Paukkunen, "Spatial resolution of dijet photoproduction in near-encounter ultraperipheral nuclear collisions," Phys. Rev. C 110, 054906 (2024).
 
 Units are GeV-based throughout.
 
