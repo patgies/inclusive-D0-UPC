@@ -7,12 +7,14 @@
 # grid for each one. It's basically the same idea as the other member scripts,
 # just without the extra b integration.
 #
-# The member files are already prepared in data/bk4param/mve/. We just read them
-# and run the dipole code for each member. The output lands in
-# $OUTBASE/member_<NNNN>/spectrum_y<Y>.dat.
+# The proton BK uncertainty ensemble comes from the parameter sample in
+# bk/bk4param/theta_100_mve.dat. That file contains 100 random BK initial-
+# condition parameter draws; the generated dipole member files are stored in
+# bk/bk4param/mve/member_<NNNN>.dat and are used to build the proton uncertainty
+# band. The output lands in $OUTBASE/member_<NNNN>/spectrum_y<Y>.dat.
 #
-# This is mostly for building the uncertainty band from the BK 4-parameter
-# sample, and then cross_section.py does the normalization and combination.
+# This builds the uncertainty band from the proton BK 4-parameter sample,
+# and then cross_section.py does the normalization and combination.
 #
 #   MEMBERS="0 1 2" ./run_bk4param_members.sh   # quick subset test
 #   ./run_bk4param_members.sh                   # full 100-member set
@@ -20,7 +22,8 @@
 set -euo pipefail
 
 BIN=./build/bin/dipole
-DIPOLE_DIR=${DIPOLE_DIR:-data/bk4param/mve}
+THETA_FILE=${THETA_FILE:-bk/bk4param/theta_100_mve.dat}
+DIPOLE_DIR=${DIPOLE_DIR:-bk/bk4param/mve}
 OUTBASE=${OUTBASE:-out/bk4param}
 CORES=${CORES:-$(( $(nproc) / 2 ))}
 PT_MIN=${PT_MIN:-0.1}

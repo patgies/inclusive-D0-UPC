@@ -1,15 +1,12 @@
 #!/bin/bash
 
-# quick usage: ./run_bk_posterior_members.sh
+# usage: ./run_bk_posterior_members.sh
 #
-# This is the same idea as run_HymnD_members.sh, but instead of varying the
-# fragmentation function, we vary the dipole amplitude across BK posterior
-# samples. So the fragmentation part stays fixed while the dipole input keeps
-# changing.
+# Varies the dipole amplitude across BK posterior samples. Fragmentation stays fixed.
 #
-# In other words: one member = one BK posterior sample, and we run the whole
+# One member = one BK posterior sample, and we run the whole
 # Pb grid for that sample. This is meant to estimate the BK initial-condition
-# uncertainty. Not the most elegant setup, but it does the job.
+# uncertainty. 
 #
 # The member dirs live in data/Pb/bk_posterior/member_<NNNN>, and the output
 # gets written in the same general way as the other runs. This one is mostly
@@ -21,11 +18,11 @@
 
 set -euo pipefail
 
-BK_DIR=${BK_DIR:-data/Pb/bk_posterior}
+BK_DIR=${BK_DIR:-bk/bk_posterior}
 OUTBASE=${OUTBASE:-out/bk_posterior}
 MEMBERS=${MEMBERS:-$(seq 0 99)}
 FRAG_TYPE=${FRAG_TYPE:-LHAPDF}
-LHAPDF_FILE=${LHAPDF_FILE:-data/prompt-D0-1-109/prompt-D0-1-109_0000.dat}
+LHAPDF_FILE=${LHAPDF_FILE:-inputs/prompt-D0-1-109/prompt-D0-1-109_0000.dat}
 
 mkdir -p "$OUTBASE"
 

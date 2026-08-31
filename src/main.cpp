@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 
     gsl_set_error_handler_off();
 
-    load_data_and_initialize("./data/Gamma_AA.dat");
+    load_data_and_initialize("./inputs/Gamma_AA.dat");
 
     parameters param;
     param.dipole = &inst;
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
 
     string hymnD_file = getenv("HYMND_FILE")
         ? getenv("HYMND_FILE")
-        : "data/prompt-D0-1-109/prompt-D0-1-109_0000.dat";
+        : "inputs/prompt-D0-1-109/prompt-D0-1-109_0000.dat";
     const int hymnD_charm_flavor = 4;
     if (param.frag_type == FragmentationType::HymnD) {
         param.D_frag_interp = MakeHymnDZInterpolator(hymnD_file, hymnD_charm_flavor, frag_scale);

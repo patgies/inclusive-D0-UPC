@@ -56,7 +56,7 @@ def load_cms_data():
     # this function reads the 3 CMS csv files and puts everything
     # into one big dictionary so we can look it up later
     data = {}
-    pattern = "data/HEPData-ins2968597-v1-D^0_cross_section_for_*_GeV_in_PbPb_UPCs.csv"
+    pattern = "inputs/HEPData-ins2968597-v1-D^0_cross_section_for_*_GeV_in_PbPb_UPCs.csv"
     file_list = glob.glob(pattern)
 
     for filename in file_list:
@@ -282,7 +282,7 @@ def compute_bk_posterior_theory_points(frag_type="LHAPDF"):
     # compute_lhapdf_replica_theory_points does), we take the *fractional*
     # 16th/84th percentile spread of all 100 samples around their own
     # median.
-    member_dirs = sorted(glob.glob("data/Pb/bk_posterior/member_*"))
+    member_dirs = sorted(glob.glob("bk/bk_posterior/member_*"))
     if len(member_dirs) < 2:
         return None
 

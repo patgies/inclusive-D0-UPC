@@ -84,7 +84,7 @@ The comparison plots in [python/cms_comparison.py](python/cms_comparison.py) inc
 
 - a factorization-scale band from varying `Q` by a factor of `0.5` and `2` around the central scale.
 
-The BK initial-condition uncertainty is only about $2\%$ in the relevant bins and is therefore not included in the displayed public band. The BK posterior samples are still available in the output directories under `data/Pb/bk_posterior/member_*/...`, and the replica set is also kept in `files/HymnD/member_*/...` for reference.
+The BK initial-condition uncertainty is only about $2\%$ in the relevant bins and is therefore not included in the displayed public band. The BK posterior samples are still available in the output directories under `bk/bk_posterior/member_*/...`, and the proton BK parameter ensemble used to generate the proton-band member files is stored in `bk/bk4param/theta_100_mve.dat`. The corresponding generated proton member dipoles live in `bk/bk4param/mve/member_*/...`, and the HymnD replica set is also kept in `files/HymnD/member_*/...` for reference.
 
 The final CMS-style theory band keeps the dominant factorization-scale variation, while the small BK contribution and the small HymnD replica contribution are omitted. The BK uncertainty is an independent variation of the dipole initial condition: the code samples many posterior configurations of the BK fit and evolves each one separately, while keeping the fragmentation function fixed. 
 

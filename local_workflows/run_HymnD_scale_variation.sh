@@ -17,7 +17,7 @@
 
 set -euo pipefail
 
-LHAPDF_DIR=${LHAPDF_DIR:-data/prompt-D0-1-109}
+LHAPDF_DIR=${LHAPDF_DIR:-inputs/prompt-D0-1-109}
 LHAPDF_SET=${LHAPDF_SET:-prompt-D0-1-109}
 OUTBASE=${OUTBASE:-out/HymnD_scale}
 SCALE_FACTORS=${SCALE_FACTORS:-"0.5 2.0"}
