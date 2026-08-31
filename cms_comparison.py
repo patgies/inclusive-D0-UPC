@@ -1,6 +1,6 @@
 """
 This script makes a plot that compares our theory predictions
-(three fragmentation schemes: BCFY, Kniehl-Kramer, and LHAPDF)
+(three fragmentation schemes: BCFY, Kniehl-Kramer, and HymnD)
 to the CMS data for D0 mesons in Pb+Pb collisions.
 
 CMS data comes from HEPData (doi:10.17182/hepdata.156822).
@@ -182,15 +182,15 @@ def compute_theory_points(pattern):
     return out
 
 
-def compute_lhapdf_scale_theory_points():
-    # LHAPDF's error bars come from changing the factorization scale Q
+def compute_hymnd_scale_theory_points():
+    # HymnD's error bars come from changing the factorization scale Q
     # (instead of using the 101 replicas). We need 3 runs:
-    # the normal one (Q = mt0) and the two "out/lhapdf_scale" ones
+    # the normal one (Q = mt0) and the two "out/HymnD_scale" ones
     # (Q = mt0/2 and Q = mt0*2). If those two haven't been produced
     # yet, we just don't draw the error bars.
-    central_pattern = "files/D0_incl_LHAPDF_An0n_Pb_y*.dat"
-    low_pattern = "out/lhapdf_scale/factor_0.5/files/D0_incl_LHAPDF_An0n_Pb_y*.dat"
-    high_pattern = "out/lhapdf_scale/factor_2.0/files/D0_incl_LHAPDF_An0n_Pb_y*.dat"
+    central_pattern = "files/D0_incl_HymnD_An0n_Pb_y*.dat"
+    low_pattern = "out/HymnD_scale/factor_0.5/files/D0_incl_HymnD_An0n_Pb_y*.dat"
+    high_pattern = "out/HymnD_scale/factor_2.0/files/D0_incl_HymnD_An0n_Pb_y*.dat"
 
     if len(glob.glob(central_pattern)) == 0:
         return None
@@ -225,23 +225,23 @@ def compute_lhapdf_scale_theory_points():
     return out
 
 
-def compute_lhapdf_replica_theory_points():
-    # LHAPDF's other source of uncertainty: the 100 MC fit replicas (as
+def compute_hymnd_replica_theory_points():
+    # HymnD's other source of uncertainty: the 100 MC fit replicas (as
     # opposed to the scale variation above, which always uses the central
     # member). member_0000 is the central fit; members 0001-0100 are the
     # replicas the 68% band is built from. These come from
-    # run_lhapdf_members_oberon.sh; if it hasn't been run yet, we skip this
+    # run_HymnD_members_oberon.sh; if it hasn't been run yet, we skip this
     # band.
-    member_dirs = sorted(glob.glob("files/lhapdf/member_*"))
+    member_dirs = sorted(glob.glob("files/HymnD/member_*"))
     if len(member_dirs) < 2:
         return None
 
     central_theory = compute_theory_points(
-        os.path.join(member_dirs[0], "files/D0_incl_LHAPDF_An0n_Pb_y*.dat")
+        os.path.join(member_dirs[0], "files/D0_incl_HymnD_An0n_Pb_y*.dat")
     )
     replica_theory = []
     for member_dir in member_dirs[1:]:
-        pattern = os.path.join(member_dir, "files/D0_incl_LHAPDF_An0n_Pb_y*.dat")
+        pattern = os.path.join(member_dir, "files/D0_incl_HymnD_An0n_Pb_y*.dat")
         replica_theory.append(compute_theory_points(pattern))
 
     out = []
@@ -265,25 +265,23 @@ def compute_lhapdf_replica_theory_points():
 
 def compute_bk_posterior_theory_points(frag_type="LHAPDF"):
     # Uncertainty source shared by every fragmentation scheme: 100 posterior
-    # samples of the BK initial-condition fit ("LOmvefit" -- Q_{s,0}^2, e_c,
+    # samples of the BK initial-condition fit ("LOmvefit": Q_{s,0}^2, e_c,
     # C^2, sigma0/2; see bk/posteriorsamples_100_LOmvefit.dat), each
     # independently BK-evolved to its own dipole amplitude
     # (data/Pb/bk_posterior/member_<NNNN>), with the fragmentation function
-    # held fixed at frag_type's central member/scale -- the opposite of
+    # held fixed at frag_type's central member/scale,the opposite of
     # compute_lhapdf_replica_theory_points, which varies the fragmentation
     # function at fixed dipole. Comes from run_bk_posterior_members_oberon.sh
     # (FRAG_TYPE=<frag_type> when it was run).
     #
-    # Unlike the LHAPDF replica set, there is no reason posterior sample
+    # Unlike the LHAPDF replica set, there is no posterior sample
     # "member 0" should coincide with the real central (data/Pb/mve)
-    # dipole -- the 100 samples are independent draws from the fit
+    # dipole,the 100 samples are independent draws from the fit
     # posterior, not variations around a labeled central member. So instead
     # of splitting off one member as "the" central value (as
     # compute_lhapdf_replica_theory_points does), we take the *fractional*
     # 16th/84th percentile spread of all 100 samples around their own
-    # median, to be re-applied to the real central value by whichever
-    # caller combines it in -- same reasoning as the fractional workaround
-    # used for the once-stale LHAPDF replica set.
+    # median.
     member_dirs = sorted(glob.glob("data/Pb/bk_posterior/member_*"))
     if len(member_dirs) < 2:
         return None
@@ -320,7 +318,7 @@ def compute_combined_theory_points():
     # (posterior-sample dipole) uncertainty. Combined in quadrature since
     # each varies one thing (Q, the fragmentation-function fit, or the
     # dipole amplitude) while holding the other two fixed.
-    scale = compute_lhapdf_scale_theory_points()
+    scale = compute_hymnd_scale_theory_points()
     # replicas = compute_lhapdf_replica_theory_points()
     replicas = None
     # bk = compute_bk_posterior_theory_points("LHAPDF")
@@ -361,7 +359,7 @@ def compute_combined_theory_points():
 def compute_bk_only_theory_points(pattern, frag_type):
     # BCFY and Kniehl-Kramer have no scale-variation or fit-replica study
     # (they're fixed analytic forms, not a PDF/FF-fit with its own members)
-    # -- so the only uncertainty source available for them is the BK
+    # so the only uncertainty source available for them is the BK
     # initial-condition (posterior-sample dipole) one, applied on top of
     # that scheme's own central prediction.
     bk = compute_bk_posterior_theory_points(frag_type)
@@ -383,16 +381,12 @@ def compute_bk_only_theory_points(pattern, frag_type):
     return out
 
 
-# list of (data file pattern, name to show in legend, marker shape, offset,
-# FRAG_TYPE tag used to look up that scheme's BK-posterior sweep output,
-# marker fill style) -- BCFY: empty hexagon; Kniehl-Kramer: empty triangle;
-# HymnD: solid point, distinguished by its error bar (the only scheme with
-# a computed uncertainty band right now).
+
 FRAG_SCHEMES = [
     ("files/D0_incl_BCFY_An0n_Pb_y*.dat", "BCFY", "h", 0.06, "BCFY", "empty"),
     ("files/D0_incl_KniehlKramer_An0n_Pb_y*.dat", "Kniehl-Kramer", "^", -0.06, "KniehlKramer", "empty"),
     (
-        "files/D0_incl_LHAPDF_An0n_Pb_y*.dat",
+        "files/D0_incl_HymnD_An0n_Pb_y*.dat",
         r"HymnD ($Q=0.5$-$2\times \sqrt{m_c^2+k_{D\perp}^2}$)",
         ".", -0.12, "LHAPDF", "solid",
     ),
@@ -411,7 +405,7 @@ def main():
         8.0: r"$8 < k_{D\perp} < 12$",
     }
 
-    # draw a box for every CMS data point (value +/- stat and syst error)
+
     for pt_lo, pt_hi, y_bins in PT_BINS_Y_BINS:
         color = colors[pt_lo]
         rows = cms_data[(pt_lo, pt_hi)]
@@ -428,7 +422,7 @@ def main():
             )
             plt.gca().add_patch(box)
 
-    # draw a marker for each theory scheme
+
     for pattern, frag_label, marker, dx, frag_type, style in FRAG_SCHEMES:
         theory = compute_theory_points(pattern)
         for pt_lo, pt_hi, y_points in theory:
@@ -439,9 +433,7 @@ def main():
                 y_centers.append(0.5 * (y_lo + y_hi))
                 values.append(avg)
             if style == "hatched":
-                # plain plt.plot markers can't carry a hatch, so these go
-                # through scatter (a PathCollection) instead, whose
-                # face/edge/hatch are set separately.
+     
                 pc = plt.scatter(
                     y_centers, values, marker=marker, s=36,
                     facecolor=color, edgecolor="black", linewidth=0.8,
@@ -451,14 +443,7 @@ def main():
                 facecolor = color if style == "solid" else "none"
                 plt.plot(y_centers, values, marker, color=color, markerfacecolor=facecolor)
 
-    # draw each scheme's uncertainty band, if we have one -- a classic
-    # error bar (vertical whisker + horizontal caps) centered on the bin
-    # midpoint, rather than a box spanning the whole bin width, so it
-    # doesn't compete visually with the CMS data box in the same spot.
-    # HymnD (LHAPDF) gets scale variation + fit/replica + BK
-    # initial-condition combined in quadrature; BCFY and Kniehl-Kramer have
-    # no scale/replica study of their own, so they only get the
-    # BK-initial-condition band, on top of their own central prediction.
+
     bands_drawn = {}
     for pattern, frag_label, marker, dx, frag_type, style in FRAG_SCHEMES:
         if frag_type == "LHAPDF":
@@ -483,8 +468,7 @@ def main():
     handles = []
     for pattern, frag_label, marker, dx, frag_type, style in FRAG_SCHEMES:
         if style == "hatched":
-            # match the hatched scatter markers above -- a Line2D proxy
-            # can't show a hatch, so use a real (off-plot) scatter handle.
+
             one_handle = plt.scatter(
                 [], [], marker=marker, s=36,
                 facecolor="black", edgecolor="black", linewidth=0.8, label=frag_label,
@@ -496,9 +480,7 @@ def main():
                 markerfacecolor="black" if style == "solid" else "none", label=frag_label,
             )
         handles.append(one_handle)
-    # CMS data and Fragmentation function legends sit side by side (both
-    # anchored bottom-left) with a thin vertical rule between them, instead
-    # of occupying opposite corners.
+
     scheme_legend = plt.legend(
         handles=handles, title="Fragmentation function", frameon=False,
         loc="lower left", bbox_to_anchor=(0.305, -0.01), handletextpad=0.3,
@@ -526,16 +508,14 @@ def main():
     plt.ylabel(r"$d\sigma/dk_{D\perp}dy_D$ [mb/GeV]")
     plt.title(r"Pb + Pb $\to$ D$^0$ + X  (An0n, $\sqrt{s}=5.36$ TeV)")
 
-    # Figure caption, split across lines rather than one long figtext -- a
-    # single very long line forces bbox_inches="tight" to widen the whole
-    # saved canvas to fit it, shrinking the plot itself.
+    # Figure caption, 
     caption_lines = []
     if "LHAPDF" in bands_drawn:
         caption_lines.append(
             r"\textbf{HymnD band.} Combines in quadrature: factorization-scale "
             r"variation ($Q=0.5$-$2\times \sqrt{m_c^2+k_{D\perp}^2}$),"
         )
-        caption_lines.append(r"fit (replica) uncertainty from the 100 HymnD fit replicas")
+        caption_lines.append(r"fit uncertainty from the 100 HymnD fit replicas")
         if bands_drawn["LHAPDF"]:
             caption_lines[-1] += r","
             caption_lines.append(
@@ -558,7 +538,7 @@ def main():
     plt.xlim(-2.4, 2.4)
     plt.ylim(1e-4, 1e1)
     plt.gca().xaxis.set_major_locator(MultipleLocator(1))
-    plt.savefig("plots/D0_incl_dsigma_dkDperp_dyD_PbPb.pdf", dpi=150, bbox_inches="tight")
+    plt.savefig("plots/D0_incl_CMS_comparison.pdf", dpi=150, bbox_inches="tight")
 
 
 if __name__ == "__main__":

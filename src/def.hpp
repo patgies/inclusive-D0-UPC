@@ -5,7 +5,7 @@
 #include "amplitudelib.hpp"
 #include "interpolation.hpp"
 
-enum class FragmentationType { BCFY, KniehlKramer, LHAPDF };
+enum class FragmentationType { BCFY, KniehlKramer, HymnD };
 
 struct parameters
 {
@@ -17,7 +17,6 @@ struct parameters
     double y;       // rapidity
     double ss;      // sqrt(s)
     double xbj;     // representative xbj (at z=1), used only to seed the interpolator cache
-    double qpmin;   // tightest valid qp lower bound, reached at z=1 (pc=pD0)
 
     // Fragmentation (c -> D0)
     double r;            // BCFY non-perturbative parameter
@@ -29,19 +28,16 @@ struct parameters
     double alpha, Z, mn, S;
     std::string channel;
 
-    // VEGAS integration box 
-    double bmin, bmax, qpmax, rmax, lmax;
+    // VEGAS integration box
+    double bmin, bmax, qpmax, lmax;
     size_t calls;
 
     // Precomputed S_k grid for momentum-space evaluation
     std::unique_ptr<Interpolator> Sk_interp;
 
-    // Precomputed z-interpolator for the LHAPDF fragmentation function,
-    // evaluated at fixed Q=m (only used when frag_type == FragmentationType::LHAPDF)
+    // Precomputed z-interpolator for the HymnD fragmentation function,
+    // evaluated at fixed Q=m (only used when frag_type == FragmentationType::HymnD)
     std::unique_ptr<Interpolator> D_frag_interp;
-
-    // Fixed photon momentum for differential-in-qp calculation
-    double qp_fixed = 0.0;
 };
 
 // Assumes par->Sk_interp is already set (precomputed in main before parallel launch).

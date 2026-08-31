@@ -116,18 +116,16 @@ def load_results(pattern):
     return results
 
 
-def load_lhapdf_band(member_dir_pattern):
-    # Combine one run_many_Pb.sh output set per LHAPDF replica member into
-    # a mean +/- standard-deviation band per rapidity. Returns an empty
-    # dictionary if there are no member directories yet (that is, if
-    # run_lhapdf_members.sh hasn't been run).
+def load_hymnd_band(member_dir_pattern):
+    # Combine one run_many_Pb.sh output set per HymnD replica member into
+    # a mean +/- standard-deviation band per rapidity.
     member_dirs = sorted(glob.glob(member_dir_pattern))
     if len(member_dirs) == 0:
         return {}
 
     per_member_results = []
     for member_dir in member_dirs:
-        one_pattern = os.path.join(member_dir, "files/D0_incl_LHAPDF_An0n_Pb_y*.dat")
+        one_pattern = os.path.join(member_dir, "files/D0_incl_HymnD_An0n_Pb_y*.dat")
         per_member_results.append(load_results(one_pattern))
 
     band = {}
@@ -160,11 +158,11 @@ def main():
     results_g1 = load_results("files/D0_incl_KniehlKramer_An0n_G1_Pb_y*.dat")
     results_no_g1 = load_results("files/D0_incl_KniehlKramer_An0n_Pb_y*.dat")
     results_bcfy = load_results("files/D0_incl_BCFY_An0n_Pb_y*.dat")
-    lhapdf_band = load_lhapdf_band("files/lhapdf/member_*")
-    if lhapdf_band:
-        results_lhapdf = None
+    hymnd_band = load_hymnd_band("files/HymnD/member_*")
+    if hymnd_band:
+        results_hymnd = None
     else:
-        results_lhapdf = load_results("files/D0_incl_LHAPDF_An0n_Pb_y*.dat")
+        results_hymnd = load_results("files/D0_incl_HymnD_An0n_Pb_y*.dat")
 
     # Plot the results for each rapidity y
 
@@ -217,11 +215,11 @@ def main():
             cross_section_values.append(point[1])
         plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle=":")
 
-    if lhapdf_band:
-        for y in sorted(lhapdf_band):
+    if hymnd_band:
+        for y in sorted(hymnd_band):
             if y > 2.0:
                 continue
-            pt_values, means, stds = lhapdf_band[y]
+            pt_values, means, stds = hymnd_band[y]
             color = colors.get(y)
             lower = []
             upper = []
@@ -236,10 +234,10 @@ def main():
             plt.fill_between(pt_values, lower, upper, color=color, alpha=0.2, linewidth=0)
             plt.plot(pt_values, means, color=color, linestyle="-.")
     else:
-        for y in sorted(results_lhapdf):
+        for y in sorted(results_hymnd):
             if y > 2.0:
                 continue
-            points = sorted(results_lhapdf[y])
+            points = sorted(results_hymnd[y])
             pt_values = []
             cross_section_values = []
             for point in points:
@@ -255,16 +253,16 @@ def main():
     y_legend = plt.legend(loc="upper right")
     plt.gca().add_artist(y_legend)
 
-    if lhapdf_band:
-        lhapdf_legend_text = "LHAPDF (mean +/- std over replicas)"
+    if hymnd_band:
+        hymnd_legend_text = "HymnD (mean +/- std over replicas)"
     else:
-        lhapdf_legend_text = "LHAPDF (member 0, no errors)"
+        hymnd_legend_text = "HymnD (member 0, no errors)"
 
     style_handles = [
         Line2D([0], [0], color="black", linestyle="-", label="KniehlKramer, G1"),
         Line2D([0], [0], color="black", linestyle="--", label="KniehlKramer, no G1"),
         Line2D([0], [0], color="black", linestyle=":", label="BCFY"),
-        Line2D([0], [0], color="black", linestyle="-.", label=lhapdf_legend_text),
+        Line2D([0], [0], color="black", linestyle="-.", label=hymnd_legend_text),
     ]
     plt.legend(handles=style_handles, loc="lower left")
 

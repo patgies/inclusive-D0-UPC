@@ -70,7 +70,7 @@ def D_kniehl_kramer(z, N=0.694, eps=0.101):
         return 0.0
     return N * z * (1.0 - z)**2 / ((1.0 - z)**2 + eps * z)**2
 
-# LHAPDF: prompt D0 fragmentation (central member) 
+# HymnD: prompt D0 fragmentation (central member)
 
 def D_lhapdf(z, Q=1.5, setname="prompt-D0-1-109", pid=4):
     pdf = lhapdf.mkPDF(setname, 0)
@@ -115,20 +115,21 @@ lo, hi = np.percentile(vals, [16, 84], axis=0)
 fig, ax = plt.subplots(figsize=(6.5, 5.5))
 
 ax.plot(z, bcfy,    color='royalblue', lw=2,
-        label=r'BCFY ($r=0.1$) [NLO, Braaten et al., $Q^2=1.5^2$ GeV$^2$]')
+        label=r'BCFY ($r=0.1$) [Braaten et al., $Q=1.5$ GeV]')
 ax.plot(z, kniehl_kramer, color='crimson',  lw=2, linestyle='--',
-        label=r'Kniehl \& Kramer ($N=0.694,\,\varepsilon=0.101$)  [LO, $Q^2=1.5^2$ GeV$^2$]')
+        label=r'Kniehl \& Kramer ($N=0.694,\,\varepsilon=0.101$)  [$Q=1.5$ GeV]')
+# the band is shown together with the HymnD label, instead of as a separate legend item
 ax.plot(z, central_member_ff, color='darkgreen', lw=2, linestyle='-.',
-        label=r'LHAPDF central member  [NLO, $Q^2=1.5^2$ GeV$^2$]')
+        label=r'HymnD [$Q=1.5$ GeV, 68\% band]')
 #ax.plot(z, lhapdf_ff, color='forestgreen', lw=2, linestyle=':',
-#        label=r'LHAPDF median over replicas')
-ax.fill_between(z, lo, hi, color='forestgreen', alpha=0.2, label=r'LHAPDF 68\% band')
+#        label=r'HymnD median over replicas')
+ax.fill_between(z, lo, hi, color='forestgreen', alpha=0.2)
 ax.set_xlabel(r'$z$')
 ax.set_ylabel(r'$D_{c \to D^0}(z)$', labelpad=15)
 ax.set_title(r'Fragmentation functions')
-ax.legend(fontsize=10)
+ax.legend(loc='upper left', bbox_to_anchor=(0.03, 0.97), ncol=1, fontsize=11, frameon=False)
 ax.set_xlim(0, 1)
-ax.set_ylim(bottom=0)
+ax.set_ylim(0, 7.5)
 
 # The x-axis "0.0" and y-axis "0" labels both sit right at the
 # bottom-left corner and overlap there -- hide the y-axis zero label

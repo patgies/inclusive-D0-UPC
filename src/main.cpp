@@ -5,7 +5,7 @@
 #include "interpolation.hpp"
 #include "fourier.h"
 #include "fragmentation.hpp"
-#include "lhapdf_grid.hpp"
+#include "hymnd_grid.hpp"
 #include <string>
 #include <vector>
 #include <sstream>
@@ -48,11 +48,7 @@ int main(int argc, char* argv[])
     inst.SetOutOfRangeErrors(false);
     inst.SetInterpolationMethod(LINEAR_LINEAR);
 
-    // Some BK solver output (e.g. the rcbk-produced posterior-sample dipole
-    // files) leaves x0 out of the header, which DataFile reads as an
-    // "invalid x0" and resets to 0 -- fix that up here rather than editing
-    // the data files. Only takes effect if explicitly requested, so it's a
-    // no-op for every other dataset's already-correct header value.
+    // Some dipole files miss x0 in the header, so fix it here if needed.
     if (getenv("DIPOLE_X0")) {
         inst.SetX0(StrToReal(getenv("DIPOLE_X0")));
     }
@@ -79,52 +75,39 @@ int main(int argc, char* argv[])
             param.frag_type = FragmentationType::BCFY;
         } else if (frag_type_env == "KniehlKramer") {
             param.frag_type = FragmentationType::KniehlKramer;
-        } else if (frag_type_env == "LHAPDF") {
-            param.frag_type = FragmentationType::LHAPDF;
+        } else if (frag_type_env == "HymnD") {
+            param.frag_type = FragmentationType::HymnD;
         } else {
-            cerr << "Error: unknown FRAG_TYPE '" << frag_type_env << "'. Expected BCFY, KniehlKramer or LHAPDF." << endl;
+            cerr << "Error: unknown FRAG_TYPE '" << frag_type_env << "'. Expected BCFY, KniehlKramer or HymnD." << endl;
             return 1;
         }
     }
 
-    // Transverse mass of the observed D0, used as the LHAPDF fragmentation
-    // scale below (Q = scale_factor * mt0) as well as for xbj and qpmin
-    // further down.
     double mt0 = sqrt(param.pD0*param.pD0 + param.m2);
 
-    // Scale-variation knob: Q = scale_factor * mt0. Defaults to 1.0 (central
-    // scale); set to 0.5 or 2.0 to get the conventional up/down scale
-    // envelope on top of the LHAPDF replica (PDF-fit) uncertainty.
     double scale_factor = getenv("SCALE_FACTOR") ? StrToReal(getenv("SCALE_FACTOR")) : 1.0;
     double frag_scale = scale_factor * mt0;
-    // Below the charm mass, the fragmentation function is undefined (the
-    // LHAPDF grid's charm production threshold): use the charm mass itself
-    // as a floor rather than letting a small scale_factor push Q below it
-    // (matches diffractive-D0-UPC/src/main.cpp's convention).
     if (frag_scale < param.m) frag_scale = param.m;
 
-    // Grid file for FragmentationType::LHAPDF: member 0 (central value) of an
-    // LHAPDF lhagrid1-format fragmentation function set. Override with LHAPDF_FILE.
-    string lhapdf_file = getenv("LHAPDF_FILE")
-        ? getenv("LHAPDF_FILE")
+    string hymnD_file = getenv("HYMND_FILE")
+        ? getenv("HYMND_FILE")
         : "data/prompt-D0-1-109/prompt-D0-1-109_0000.dat";
-    const int lhapdf_charm_flavor = 4;  // PDG id for the charm quark
-    if (param.frag_type == FragmentationType::LHAPDF) {
-        param.D_frag_interp = MakeLHAPDFZInterpolator(lhapdf_file, lhapdf_charm_flavor, frag_scale);
+    const int hymnD_charm_flavor = 4;
+    if (param.frag_type == FragmentationType::HymnD) {
+        param.D_frag_interp = MakeHymnDZInterpolator(hymnD_file, hymnD_charm_flavor, frag_scale);
     }
     param.zmin = 0.05;
     param.zmax = 1.0;
 
     param.alpha   = 1.0/137.0;
     param.Z       = 82.0;
-    param.mn      = (208 * 0.931) / 208;  // M/A, matching old-inclusiveD0's gamma_L = (ss/2)/(M/A)
+    param.mn      = (208 * 0.931) / 208;
     param.S       = pow(17.4, 2) / pow(0.197327, 2);
     param.channel = getenv("CHANNEL") ? getenv("CHANNEL") : "An0n";
 
     param.bmin    = 14.2 / 0.197327;
     param.bmax    = 650.0;
     param.qpmax   = 800.0;
-    param.rmax    = 150.0;
     param.lmax    = 50.0;
     param.calls   = 2e5;
 
@@ -136,8 +119,8 @@ int main(int argc, char* argv[])
         case FragmentationType::KniehlKramer:
             cout << "Kniehl & Kramer (N=" << param.N_kk << ", eps=" << param.eps_kk << ")";
             break;
-        case FragmentationType::LHAPDF:
-            cout << "LHAPDF (" << lhapdf_file << ", member 0, Q=" << scale_factor << "*mt0=" << frag_scale << ")";
+        case FragmentationType::HymnD:
+            cout << "HymnD (" << hymnD_file << ", member 0, Q=" << scale_factor << "*mt0=" << frag_scale << ")";
             break;
         case FragmentationType::BCFY:
         default:
@@ -153,7 +136,6 @@ int main(int argc, char* argv[])
     double xbj = (mt0 / param.ss) * exp(-y);
     if (xbj > 0.01) xbj = 0.01;
     param.xbj  = xbj;
-    param.qpmin = (mt0 / sqrt(2.0)) * exp(y);
 
     param.Sk_interp = inst.MakeSkInterpolator(xbj, param.lmax);
 

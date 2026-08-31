@@ -10,18 +10,10 @@
 
 using namespace std;
 
-
-// Hard amplitude in momentum space — same formula as inclusive-D0-UPC/src/function.cpp.
-// pc  = charm quark transverse momentum (= pD0/zh)
-// kp  = charm quark plus-momentum = (mT/sqrt(2))*exp(y)
-// l   = gluon transverse momentum magnitude
-// phi = angle between pc and l vectors
-// qp  = photon plus-momentum
-
 static double F_hard(double m, double kp, double pc, double l, double phi, double qp)
 {
     double z   = kp / qp;
-    double abr = pc*pc + l*l - 2.0*pc*l*cos(phi);  // |pc - l|^2
+    double abr = pc*pc + l*l - 2.0*pc*l*cos(phi);
 
     double den1 = (m*m + abr) * (m*m + abr);
     double den2 = (m*m + pc*pc) * (m*m + pc*pc);
@@ -33,48 +25,38 @@ static double F_hard(double m, double kp, double pc, double l, double phi, doubl
     return l * (2.0*z*m*m*par1 + 2.0*z*(z*z + (1.0-z)*(1.0-z))*par2);
 }
 
-
-
-// par->Sk_interp must be set by the caller before launching VEGAS.
-
 double integrand_inclusive(double* vec, size_t /*dim*/, void* p)
 {
     parameters* par = (parameters*)p;
 
     double zh   = vec[0];
-    double u_qp = vec[1];   // rescaled to [pp_zh, qpmax]
+    double u_qp = vec[1];
     double b    = vec[2];
     double phi  = vec[3];
     double l    = vec[4];
 
-    //Kinematics from zh
     double pc    = par->pD0 / zh;
     double mt    = sqrt(pc*pc + par->m2);
     double pp_zh = (mt / sqrt(2.0)) * exp(par->y);
 
-    //Rescale qp
     double jac_qp = par->qpmax - pp_zh;
     if (jac_qp <= 0.0) return 0.0;
     double qp = pp_zh + u_qp * jac_qp;
 
-    //Photon flux 
     double flux = photon_flux(b, qp, p);
 
-    //Gluon TMD: S_k from precomputed grid (set by caller)
     if (!par->Sk_interp) return 0.0;
     double Sk = par->Sk_interp->Evaluate(l);
     if (Sk < 0.0) Sk = 0.0;
 
-    // Inclusive hard factor 
     double fhard = F_hard(par->m, pp_zh, pc, l, phi, qp);
 
-    // Fragmentation function (BCFY or Kniehl & Kramer)
     double D_frag;
     switch (par->frag_type) {
         case FragmentationType::KniehlKramer:
             D_frag = D_kniehl_kramer(zh, par->N_kk, par->eps_kk);
             break;
-        case FragmentationType::LHAPDF:
+        case FragmentationType::HymnD:
             if (!par->D_frag_interp) return 0.0;
             D_frag = par->D_frag_interp->Evaluate(zh);
             break;
@@ -88,8 +70,6 @@ double integrand_inclusive(double* vec, size_t /*dim*/, void* p)
     return jac_qp * frag_weight * flux * Sk * fhard;
 }
 
-
-// Assumes par->Sk_interp is already set (precomputed in main before parallel launch).
 double D0CrossSection_inclusive(void* p)
 {
     parameters* par = (parameters*)p;
