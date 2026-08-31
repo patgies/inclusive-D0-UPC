@@ -1,7 +1,6 @@
 # Inclusive D0 photoproduction
 
-This project computes the inclusive D0 photoproduction cross section in ultraperipheral collisions (UPCs) in the CGC framework.
-The main observable is `dσ / (dy d^2 p_D0)`
+This project computes the inclusive D0 photoproduction cross section `dσ / (dy d p_D0)` in ultraperipheral collisions (UPCs) in the CGC framework.
 
 The code supports different UPC channels and fragmentation functions, and it can be used for proton and nuclear targets.
 
@@ -13,10 +12,10 @@ Based on P. Gimeno-Estivill, T. Lappi, and H. Mäntysaari, *Inclusive D⁰ photo
 ## Build
 
 ```bash
-mkdir -p build
+mkdir build
 cd build
 cmake ..
-make -j4
+make
 ```
 
 Requirements:
@@ -48,7 +47,7 @@ The arguments are:
 - `<y>`: rapidity
 - `[<dipole_file>]`: optional dipole file; if omitted, it can be read from `DIPOLE_FILE`
 
-The simple example runner is [run_local.sh](run_local.sh).
+The simple example is [run_local.sh](run_local.sh).
 
 ---
 
@@ -75,9 +74,9 @@ These are controlled through the environment variable `CHANNEL`.
 
 The fragmentation function is selected through `FRAG_TYPE`:
 
-- `BCFY`
-- `KniehlKramer`
-- `HymnD` (the public label for the LHAPDF-based fragmentation set used here)
+- `BCFY`: E. Braaten, K.-m. Cheung, S. Fleming, and T.-C. Yuan, "Perturbative QCD fragmentation functions as a model for heavy quark fragmentation," Phys. Rev. D 51, 4819–4829 (1995).
+- `KniehlKramer`: B. A. Kniehl and G. Kramer, "Charmed-hadron fragmentation functions from CERN LEP1 revisited," Phys. Rev. D 74 (2006) 037502 [arXiv:hep-ph/0607306].
+- `HymnD` 
 
 ### Uncertainty bands
 
@@ -97,7 +96,7 @@ The raw output from the large runs is per impact parameter `b`. To obtain a fina
 
 For a proton target, the impact-parameter integral is effectively absorbed into the proton normalization. The code includes the standard overall prefactor associated with the photon flux and the charm charge.
 
-In short, the final observable is built from:
+The final observable is built from:
 
 - photon flux,
 - dipole amplitude,
