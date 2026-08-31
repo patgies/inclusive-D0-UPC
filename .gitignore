@@ -2,6 +2,9 @@ build/
 */build/
 *.o
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
 CMakeCache.txt
 CMakeFiles/
 FragFunc/
