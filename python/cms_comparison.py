@@ -23,8 +23,7 @@ from cross_section import (
     pi,
 )
 
-# Run from the repo root regardless of the caller's working directory,
-# since inputs/, files/, and plots/ are all relative to it.
+# Run from the repo root regardless of the caller's working directory
 os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
 # make the plot look nicer
@@ -48,7 +47,7 @@ plt.rcParams.update({
     "ytick.minor.visible": True,
 })
 
-# these are the pT bins and, for each pT bin, the y bins we need
+
 PT_BINS_Y_BINS = [
     (2.0, 5.0, [(-1.0, 1.0)]),
     (5.0, 8.0, [(-2.0, -1.0), (-1.0, 0.0), (0.0, 1.0), (1.0, 2.0)]),
@@ -58,7 +57,7 @@ PT_BINS_Y_BINS = [
 
 def load_cms_data():
     # this function reads the 3 CMS csv files and puts everything
-    # into one big dictionary so we can look it up later
+    # into one dictionary 
     data = {}
     pattern = "inputs/HEPData-ins2968597-v1-D^0_cross_section_for_*_GeV_in_PbPb_UPCs.csv"
     file_list = glob.glob(pattern)
@@ -109,8 +108,6 @@ def load_cms_data():
 
 
 def interpolate(x, x_list, y_list):
-    # simple linear interpolation, same thing np.interp does,
-    # written out by hand so it's clear what's going on
     return float(np.interp(x, x_list, y_list))
 
 
