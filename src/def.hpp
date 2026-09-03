@@ -27,6 +27,7 @@ struct parameters
     //Photon flux
     double alpha, Z, mn, S;
     std::string channel;
+    bool gamma_aa_one = false;  // if true, force Gamma_AA(b) = 1 (no nuclear survival suppression)
 
     // VEGAS integration box
     double bmin, bmax, qpmax, lmax;

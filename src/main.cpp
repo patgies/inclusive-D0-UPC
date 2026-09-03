@@ -104,6 +104,7 @@ int main(int argc, char* argv[])
     param.mn      = (208 * 0.931) / 208;
     param.S       = pow(17.4, 2) / pow(0.197327, 2);
     param.channel = getenv("CHANNEL") ? getenv("CHANNEL") : "An0n";
+    param.gamma_aa_one = getenv("GAMMA_AA_ONE") != nullptr;
 
     param.bmin    = 14.2 / 0.197327;
     param.bmax    = 650.0;

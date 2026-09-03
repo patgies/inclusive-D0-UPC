@@ -2,7 +2,6 @@ build/
 */build/
 *.o
 __pycache__/
-*.py[cod]
 *.pyo
 *.pyd
 CMakeCache.txt
@@ -10,7 +9,7 @@ CMakeFiles/
 FragFunc/
 pdf/
 
-# Oberon/local-workflow outputs not meant for the public repo
+# Oberon/local-workflow outputs 
 local_workflows/oberon/
 local_workflows/**/oberon/
 local_workflows/**/*oberon*

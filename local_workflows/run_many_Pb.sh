@@ -73,9 +73,14 @@ if [[ -z "$channel_tag" ]]; then
 	exit 1
 fi
 
+g1_tag=""
+if [[ -n "${GAMMA_AA_ONE:-}" ]]; then
+	g1_tag="_G1"
+fi
+
 for y in $y_vals; do
 	ytag=$(echo "$y" | tr -d '.')
-	outfile="$OUTDIR/files/D0_incl_${frag_tag}_${channel_tag}_Pb_y${ytag}.dat"
+	outfile="$OUTDIR/files/D0_incl_${frag_tag}_${channel_tag}${g1_tag}_Pb_y${ytag}.dat"
 
 	{
 		echo "$header"

@@ -23,15 +23,19 @@ from cross_section import (
     pi,
 )
 
-# make the plot look nicer 
+# Run from the repo root regardless of the caller's working directory,
+# since inputs/, files/, and plots/ are all relative to it.
+os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+
+# make the plot look nicer
 plt.rcParams.update({
     "text.usetex": True,
     "font.family": "serif",
     "font.size": 11,
-    "axes.labelsize": 16,
-    "axes.titlesize": 18,
-    "xtick.labelsize": 14,
-    "ytick.labelsize": 14,
+    "axes.labelsize": 18,
+    "axes.titlesize": 20,
+    "xtick.labelsize": 18,
+    "ytick.labelsize": 18,
     "xtick.direction": "in",
     "ytick.direction": "in",
     "xtick.top": True,
@@ -188,7 +192,7 @@ def compute_hymnd_scale_theory_points():
     # the normal one (Q = mt0) and the two "out/HymnD_scale" ones
     # (Q = mt0/2 and Q = mt0*2). If those two haven't been produced
     # yet, we just don't draw the error bars.
-    central_pattern = "files/D0_incl_HymnD_An0n_Pb_y*.dat"
+    central_pattern = "files/HymnD/member_0000/files/D0_incl_HymnD_An0n_Pb_y*.dat"
     low_pattern = "out/HymnD_scale/factor_0.5/files/D0_incl_HymnD_An0n_Pb_y*.dat"
     high_pattern = "out/HymnD_scale/factor_2.0/files/D0_incl_HymnD_An0n_Pb_y*.dat"
 
@@ -383,11 +387,11 @@ def compute_bk_only_theory_points(pattern, frag_type):
 
 
 FRAG_SCHEMES = [
-    ("files/D0_incl_BCFY_An0n_Pb_y*.dat", "BCFY", "h", 0.06, "BCFY", "empty"),
-    ("files/D0_incl_KniehlKramer_An0n_Pb_y*.dat", "Kniehl-Kramer", "^", -0.06, "KniehlKramer", "empty"),
+    ("files/central/D0_incl_BCFY_An0n_Pb_y*.dat", "BCFY", "h", 0.06, "BCFY", "empty"),
+    ("files/central/D0_incl_KniehlKramer_An0n_Pb_y*.dat", "Kniehl-Kramer", "^", -0.06, "KniehlKramer", "empty"),
     (
-        "files/D0_incl_HymnD_An0n_Pb_y*.dat",
-        r"HymnD ($Q=0.5$-$2\times \sqrt{m_c^2+k_{D\perp}^2}$)",
+        "files/HymnD/member_0000/files/D0_incl_HymnD_An0n_Pb_y*.dat",
+        r"HymnD",
         ".", -0.12, "LHAPDF", "solid",
     ),
 ]
@@ -398,11 +402,12 @@ def main():
 
     plt.figure(figsize=(6.5, 5.5))
 
-    colors = {2.0: "tab:green", 5.0: "tab:red", 8.0: "tab:blue"}
+    # Stronger/more saturated than matplotlib's muted "tab:" set.
+    colors = {2.0: "#0a8a1e", 5.0: "#e00000", 8.0: "#0b3c8c"}
     labels = {
-        2.0: r"$2 < k_{D\perp} < 5$",
-        5.0: r"$5 < k_{D\perp} < 8$",
-        8.0: r"$8 < k_{D\perp} < 12$",
+        2.0: r"$2 < p_{D\perp} < 5$",
+        5.0: r"$5 < p_{D\perp} < 8$",
+        8.0: r"$8 < p_{D\perp} < 12$",
     }
 
 
@@ -483,7 +488,8 @@ def main():
 
     scheme_legend = plt.legend(
         handles=handles, title="Fragmentation function", frameon=False,
-        loc="lower left", bbox_to_anchor=(0.305, -0.01), handletextpad=0.3,
+        loc="lower left", bbox_to_anchor=(0.31, 0.0), handletextpad=0.3,
+        fontsize=12, title_fontsize=12,
     )
     plt.gca().add_artist(scheme_legend)
 
@@ -495,18 +501,19 @@ def main():
     plt.legend(
         handles=style_handles, title="CMS data", frameon=False,
         loc="lower left", bbox_to_anchor=(0.0, 0.0),
+        fontsize=12, title_fontsize=12,
     )
 
-    separator = plt.Line2D(
-        [0.315, 0.315], [0.02, 0.20], transform=plt.gca().transAxes,
-        color="gray", linewidth=0.8,
-    )
-    plt.gca().add_line(separator)
+    #separator = plt.Line2D(
+    #    [0.32, 0.32], [0.0, 0.13], transform=plt.gca().transAxes,
+    #    color="gray", linewidth=0.8,
+    #)
+    #plt.gca().add_line(separator)
 
     plt.yscale("log")
-    plt.xlabel(r"$y_D$")
-    plt.ylabel(r"$d\sigma/dk_{D\perp}dy_D$ [mb/GeV]")
-    plt.title(r"Pb + Pb $\to$ D$^0$ + X  (An0n, $\sqrt{s}=5.36$ TeV)")
+    plt.xlabel(r"$y$")
+    plt.ylabel(r"$\mathrm{d}\sigma/\mathrm{d}y\,\mathrm{d}p_{D\perp}$ [mb/GeV]", labelpad=10)
+    plt.title(r"Pb + Pb $\to$ D$^0$ + X ")
 
     # Figure caption, 
     caption_lines = []

@@ -72,6 +72,8 @@ double photon_flux(double b, double qp, void* p)
         } else {
             gamma = 0.0;
         }
+    } else if (par->gamma_aa_one) {
+        gamma = 1.0;
     } else {
         if (b < 150.0) {
             gamma = get_GammaAA(b);
