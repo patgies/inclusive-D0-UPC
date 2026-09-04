@@ -54,7 +54,8 @@ double integrand_inclusive(double* vec, size_t /*dim*/, void* p)
     double D_frag;
     switch (par->frag_type) {
         case FragmentationType::KniehlKramer:
-            D_frag = D_kniehl_kramer(zh, par->N_kk, par->eps_kk);
+            if (!par->D_frag_interp) return 0.0;
+            D_frag = par->D_frag_interp->Evaluate(zh);
             break;
         case FragmentationType::HymnD:
             if (!par->D_frag_interp) return 0.0;

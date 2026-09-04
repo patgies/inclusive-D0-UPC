@@ -6,6 +6,7 @@
 #include "fourier.h"
 #include "fragmentation.hpp"
 #include "hymnd_grid.hpp"
+#include "kk_grid.hpp"
 #include <string>
 #include <vector>
 #include <sstream>
@@ -96,6 +97,9 @@ int main(int argc, char* argv[])
     if (param.frag_type == FragmentationType::HymnD) {
         param.D_frag_interp = MakeHymnDZInterpolator(hymnD_file, hymnD_charm_flavor, frag_scale);
     }
+    if (param.frag_type == FragmentationType::KniehlKramer) {
+        param.D_frag_interp = MakeKniehlKramerInterpolator(frag_scale);
+    }
     param.zmin = 0.05;
     param.zmax = 1.0;
 
@@ -118,7 +122,7 @@ int main(int argc, char* argv[])
     cout << "# fragmentation : ";
     switch (param.frag_type) {
         case FragmentationType::KniehlKramer:
-            cout << "Kniehl & Kramer (N=" << param.N_kk << ", eps=" << param.eps_kk << ")";
+            cout << "Kniehl & Kramer, evolved (scale=" << scale_factor << "*mt0=" << frag_scale << ")";
             break;
         case FragmentationType::HymnD:
             cout << "HymnD (" << hymnD_file << ", member 0, Q=" << scale_factor << "*mt0=" << frag_scale << ")";
