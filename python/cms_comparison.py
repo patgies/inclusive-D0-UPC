@@ -189,6 +189,15 @@ def compute_hymnd_scale_theory_points():
     # the normal one (Q = mt0) and the two "out/HymnD_scale" ones
     # (Q = mt0/2 and Q = mt0*2). If those two haven't been produced
     # yet, we just don't draw the error bars.
+    #
+    # Deliberately NOT matching Kniehl-Kramer's wider 0.25/4.0 band: none of
+    # the fragmentation schemes here enforce the phase-space constraint
+    # D(z,mu^2) = 0 for z < M^2/mu^2 (mu = fragmentation scale, M = the
+    # produced hadron's mass), so an aggressive down-scale variation like
+    # 0.25*mt0 can dip below the D0 mass and pick up unphysical support at
+    # low pD0. At factor=0.25, mu=0.25*mt0 < mD (1.8648 GeV) for pD0 <~ 7.3
+    # GeV -- most of the analysis range; at factor=0.5 that shrinks to
+    # pD0 <~ 3.4 GeV, which is why 0.5/2.0 is the safer choice here.
     central_pattern = "files/HymnD/member_0000/files/D0_incl_HymnD_An0n_Pb_y*.dat"
     low_pattern = "out/HymnD_scale/factor_0.5/D0_incl_HymnD_An0n_Pb_y*.dat"
     high_pattern = "out/HymnD_scale/factor_2.0/D0_incl_HymnD_An0n_Pb_y*.dat"
@@ -269,9 +278,14 @@ def compute_kniehlkramer_scale_theory_points():
     # PDF/FF fit), so its only band is factorization-scale variation --
     # same construction as compute_hymnd_scale_theory_points(): the central
     # (Q=mt0) prediction plus the out/kk_scale factor_0.25/factor_4.0 runs
-    # (see local_workflows/run_KniehlKramer_scale_variation.sh). Wider than
-    # HymnD's 0.5/2.0 band -- see the mt vs mt^2 scale-variation discussion.
-    # If those haven't been produced yet, we just don't draw the error bars.
+    # (see local_workflows/run_KniehlKramer_scale_variation.sh).
+    #
+    # NB: kk_grid.cpp does NOT enforce the phase-space constraint discussed
+    # in compute_hymnd_scale_theory_points()'s comment (D=0 for z < M^2/mu^2),
+    # so this 0.25/4.0 band has the same low-pD0 leakage risk as HymnD would
+    # at that width -- it's just still at the wider setting from before that
+    # was found. If those haven't been produced yet, we just don't draw the
+    # error bars.
     central_pattern = "out/kk_scale/factor_1.0/D0_incl_KniehlKramer_An0n_Pb_y*.dat"
     low_pattern = "out/kk_scale/factor_0.25/D0_incl_KniehlKramer_An0n_Pb_y*.dat"
     high_pattern = "out/kk_scale/factor_4.0/D0_incl_KniehlKramer_An0n_Pb_y*.dat"
@@ -481,7 +495,7 @@ def main():
                 y_centers.append(0.5 * (y_lo + y_hi) + point_dx)
                 values.append(avg)
             if style == "hatched":
-     
+
                 pc = plt.scatter(
                     y_centers, values, marker=marker, s=36,
                     facecolor=color, edgecolor="black", linewidth=0.8, zorder=3,
@@ -590,7 +604,7 @@ def main():
     plt.ylabel(r"$\mathrm{d}\sigma/\mathrm{d}y\,\mathrm{d}p_{D\perp}$ [mb/GeV]", labelpad=10)
     plt.title(r"Pb + Pb $\to$ D$^0$ + X ")
 
-    # Figure caption, 
+    # Figure caption,
     caption_lines = []
     if "LHAPDF" in bands_drawn:
         caption_lines.append(

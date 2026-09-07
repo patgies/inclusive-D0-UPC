@@ -72,9 +72,9 @@ The code supports the following channels:
 
 These are controlled through the environment variable `CHANNEL`.
 
-The fragmentation function is selected through `FRAG_TYPE`:
+The fragmentation function is selected through `FRAG_TYPE`. `BCFY` and `KniehlKramer` are both DGLAP-evolved with QCDNUM (LO Altarelli-Parisi, starting scale `mu0=mc`) from their perturbative input up to the factorization scale `Q = SCALE_FACTOR * mt0` (see [src/bcfy_grid.cpp](src/bcfy_grid.cpp) and [src/kk_grid.cpp](src/kk_grid.cpp)):
 
-- `BCFY`: E. Braaten, K.-m. Cheung, S. Fleming, and T.-C. Yuan, "Perturbative QCD fragmentation functions as a model for heavy quark fragmentation," Phys. Rev. D 51, 4819–4829 (1995).
+- `BCFY`: E. Braaten, K.-m. Cheung, S. Fleming, and T.-C. Yuan, "Perturbative QCD fragmentation functions as a model for heavy quark fragmentation," Phys. Rev. D 51, 4819–4829 (1995). The pseudoscalar (c->D0) and vector (c->D*0) channels are evolved as two independent DGLAP sets and combined after evolution with the D*0->D0 branching fraction and feed-down kinematics.
 - `KniehlKramer`: B. A. Kniehl and G. Kramer, "Charmed-hadron fragmentation functions from CERN LEP1 revisited," Phys. Rev. D 74 (2006) 037502 [arXiv:hep-ph/0607306].
 - `HymnD` 
 

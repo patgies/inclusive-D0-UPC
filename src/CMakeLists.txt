@@ -1,9 +1,10 @@
 
-# QCDNum (used by kk_grid.cpp to DGLAP-evolve the Kniehl & Kramer
-# fragmentation function). Vendored under QCDnum/ (header + static libs
-# only) so this project builds standalone, without needing a QCDNum
-# source/build tree present on the machine. Override with -DQCDNUM_DIR=...
-# to point at a different build instead.
+# QCDNum (used by kk_grid.cpp and bcfy_grid.cpp to DGLAP-evolve the
+# Kniehl & Kramer and BCFY fragmentation functions, respectively). Vendored
+# under QCDnum/ (header + static libs only) so this project builds
+# standalone, without needing a QCDNum source/build tree present on the
+# machine. Override with -DQCDNUM_DIR=... to point at a different build
+# instead.
 set(QCDNUM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../QCDnum" CACHE PATH
 	"Path to a QCDNum install (containing include/QCDNUM/QCDNUM.h, lib/*.a)")
 
@@ -25,6 +26,7 @@ add_executable(
 	fragmentation.cpp
 	hymnd_grid.cpp
 	kk_grid.cpp
+	bcfy_grid.cpp
 )
 
 target_include_directories(
@@ -74,4 +76,35 @@ target_link_libraries(
 )
 
 set_target_properties(scan_KK_FF PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Diagnostic: dumps the DGLAP-evolved BCFY D(z, Q^2) at a few Q values,
+# analogous to scan_KK_FF above. Not part of the physics pipeline.
+add_executable(
+	scan_BCFY_FF
+	scan_BCFY_FF.cpp
+	bcfy_grid.cpp
+	fragmentation.cpp
+)
+
+target_include_directories(
+	scan_BCFY_FF
+	PRIVATE
+	${QCDNUM_DIR}/include
+)
+
+target_link_libraries(
+	scan_BCFY_FF
+	PRIVATE
+	amplitude
+	GSL::gsl
+	GSL::gslcblas
+	${QCDNUM_DIR}/lib/libQCDNUMCCWrap.a
+	${QCDNUM_DIR}/lib/libQCDNUM.a
+	gfortran
+	-static-libstdc++
+	-static-libgcc
+)
+
+set_target_properties(scan_BCFY_FF PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

@@ -1,6 +1,5 @@
 #include "def.hpp"
 #include "amplitudelib.hpp"
-#include "fragmentation.hpp"
 #include "gamma_aa.hpp"
 #include "interpolation.hpp"
 #include <cmath>
@@ -63,7 +62,8 @@ double integrand_inclusive(double* vec, size_t /*dim*/, void* p)
             break;
         case FragmentationType::BCFY:
         default:
-            D_frag = Dc_to_D0(zh, par->r);
+            if (!par->D_frag_interp) return 0.0;
+            D_frag = par->D_frag_interp->Evaluate(zh);
             break;
     }
     double frag_weight = D_frag / (zh * zh);

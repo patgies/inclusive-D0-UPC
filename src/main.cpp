@@ -7,6 +7,7 @@
 #include "fragmentation.hpp"
 #include "hymnd_grid.hpp"
 #include "kk_grid.hpp"
+#include "bcfy_grid.hpp"
 #include <string>
 #include <vector>
 #include <sstream>
@@ -100,6 +101,9 @@ int main(int argc, char* argv[])
     if (param.frag_type == FragmentationType::KniehlKramer) {
         param.D_frag_interp = MakeKniehlKramerInterpolator(frag_scale);
     }
+    if (param.frag_type == FragmentationType::BCFY) {
+        param.D_frag_interp = MakeBCFYInterpolator(frag_scale);
+    }
     param.zmin = 0.05;
     param.zmax = 1.0;
 
@@ -129,7 +133,7 @@ int main(int argc, char* argv[])
             break;
         case FragmentationType::BCFY:
         default:
-            cout << "BCFY (r=" << param.r << ")";
+            cout << "BCFY (r=" << param.r << "), evolved (scale=" << scale_factor << "*mt0=" << frag_scale << ")";
             break;
     }
     cout << endl;
