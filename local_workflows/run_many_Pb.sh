@@ -15,7 +15,7 @@
 # done later in Python.
 
 
-y_vals=${Y_VALS:-"0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0"}
+y_vals=${Y_VALS:-"-2.0 -1.5 -1.0 -0.5 0 0.5 1.0 1.5 2.0"}
 OUTDIR=${OUTDIR:-.}
 CORES=${CORES:-$(( $(nproc) / 2 ))}
 PT_MIN=${PT_MIN:-0.1}
@@ -57,8 +57,8 @@ header=$(grep '^#' "$first_tmp" | grep -v '^# y  dsigma_dy')
 
 if grep -q 'fragmentation.*Kniehl & Kramer' "$first_tmp"; then
 	frag_tag="KniehlKramer"
-elif grep -q 'fragmentation.*LHAPDF' "$first_tmp"; then
-	frag_tag="LHAPDF"
+elif grep -q 'fragmentation.*HymnD' "$first_tmp"; then
+	frag_tag="HymnD"
 elif grep -q 'fragmentation.*BCFY' "$first_tmp"; then
 	frag_tag="BCFY"
 else

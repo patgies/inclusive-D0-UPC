@@ -22,10 +22,10 @@ int main(int argc, char* argv[])
     if (argc != 3 && argc != 4) {
         cerr << "Error: expected 2 or 3 arguments, got " << argc - 1 << "." << endl;
         cerr << "Usage: " << argv[0] << " <pD0> [<dipole_file>] <y>" << endl;
-        cerr << "  pD0         D0 meson transverse momentum [GeV], required" << endl;
+        cerr << "  pD0  D0 meson transverse momentum [GeV], required" << endl;
         cerr << "  dipole_file path to a dipole amplitude data file;" << endl;
-        cerr << "              if omitted, read from the DIPOLE_FILE environment variable" << endl;
-        cerr << "  y           rapidity, required" << endl;
+        cerr << "  if omitted, read from the DIPOLE_FILE environment variable" << endl;
+        cerr << "  y  rapidity, required" << endl;
         return 1;
     }
 

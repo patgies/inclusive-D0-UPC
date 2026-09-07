@@ -12,4 +12,9 @@
 // are evolved once per process and summed linearly for Q >= mb.
 std::unique_ptr<Interpolator> MakeKniehlKramerInterpolator(double Q);
 
+// Raw (non-evolved) c/b -> D0 input fragmentation functions, D(x), at their
+// own natural starting scales (mc, mb) -- the un-evolved reference curves.
+double KKInitialConditionC(double x);
+double KKInitialConditionB(double x);
+
 #endif

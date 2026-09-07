@@ -33,8 +33,8 @@ mkdir -p "$OUTBASE"
 for factor in $SCALE_FACTORS; do
 	echo "=== scale factor $factor ($(date)) ==="
 	OUTDIR="$OUTBASE/factor_${factor}" \
-	FRAG_TYPE=LHAPDF \
-	LHAPDF_FILE="$member_file" \
+	FRAG_TYPE=HymnD \
+	HYMND_FILE="$member_file" \
 	SCALE_FACTOR="$factor" \
 	bash run_many_Pb.sh
 done

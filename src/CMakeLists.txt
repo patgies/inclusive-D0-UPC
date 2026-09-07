@@ -45,3 +45,33 @@ target_link_libraries(
 	-static-libstdc++
 	-static-libgcc
 )
+
+# Diagnostic: dumps D(z,Q^2) at a few Q values for
+# python/plot_kk_ff_shapes.py. Not part of the physics pipeline.
+add_executable(
+	scan_KK_FF
+	scan_KK_FF.cpp
+	kk_grid.cpp
+)
+
+target_include_directories(
+	scan_KK_FF
+	PRIVATE
+	${QCDNUM_DIR}/include
+)
+
+target_link_libraries(
+	scan_KK_FF
+	PRIVATE
+	amplitude
+	GSL::gsl
+	GSL::gslcblas
+	${QCDNUM_DIR}/lib/libQCDNUMCCWrap.a
+	${QCDNUM_DIR}/lib/libQCDNUM.a
+	gfortran
+	-static-libstdc++
+	-static-libgcc
+)
+
+set_target_properties(scan_KK_FF PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

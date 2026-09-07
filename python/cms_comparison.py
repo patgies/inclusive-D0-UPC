@@ -190,8 +190,8 @@ def compute_hymnd_scale_theory_points():
     # (Q = mt0/2 and Q = mt0*2). If those two haven't been produced
     # yet, we just don't draw the error bars.
     central_pattern = "files/HymnD/member_0000/files/D0_incl_HymnD_An0n_Pb_y*.dat"
-    low_pattern = "out/HymnD_scale/factor_0.5/files/D0_incl_HymnD_An0n_Pb_y*.dat"
-    high_pattern = "out/HymnD_scale/factor_2.0/files/D0_incl_HymnD_An0n_Pb_y*.dat"
+    low_pattern = "out/HymnD_scale/factor_0.5/D0_incl_HymnD_An0n_Pb_y*.dat"
+    high_pattern = "out/HymnD_scale/factor_2.0/D0_incl_HymnD_An0n_Pb_y*.dat"
 
     if len(glob.glob(central_pattern)) == 0:
         return None
@@ -259,6 +259,51 @@ def compute_hymnd_replica_theory_points():
             lo, hi = np.percentile(values, [16, 84])
 
             y_points.append((y_lo, y_hi, central, lo, hi))
+        out.append((pt_lo, pt_hi, y_points))
+
+    return out
+
+
+def compute_kniehlkramer_scale_theory_points():
+    # Kniehl-Kramer has no fit replicas (it's a fixed analytic form, not a
+    # PDF/FF fit), so its only band is factorization-scale variation --
+    # same construction as compute_hymnd_scale_theory_points(): the central
+    # (Q=mt0) prediction plus the out/kk_scale factor_0.25/factor_4.0 runs
+    # (see local_workflows/run_KniehlKramer_scale_variation.sh). Wider than
+    # HymnD's 0.5/2.0 band -- see the mt vs mt^2 scale-variation discussion.
+    # If those haven't been produced yet, we just don't draw the error bars.
+    central_pattern = "out/kk_scale/factor_1.0/D0_incl_KniehlKramer_An0n_Pb_y*.dat"
+    low_pattern = "out/kk_scale/factor_0.25/D0_incl_KniehlKramer_An0n_Pb_y*.dat"
+    high_pattern = "out/kk_scale/factor_4.0/D0_incl_KniehlKramer_An0n_Pb_y*.dat"
+
+    if len(glob.glob(central_pattern)) == 0:
+        return None
+    if len(glob.glob(low_pattern)) == 0:
+        return None
+    if len(glob.glob(high_pattern)) == 0:
+        return None
+
+    central_theory = compute_theory_points(central_pattern)
+    low_theory = compute_theory_points(low_pattern)
+    high_theory = compute_theory_points(high_pattern)
+
+    out = []
+    for i in range(len(PT_BINS_Y_BINS)):
+        pt_lo, pt_hi, y_bins = PT_BINS_Y_BINS[i]
+        y_points = []
+        for j in range(len(y_bins)):
+            y_lo, y_hi = y_bins[j]
+
+            central = central_theory[i][2][j][2]
+            low_value = low_theory[i][2][j][2]
+            high_value = high_theory[i][2][j][2]
+
+            # low_value and high_value are not necessarily in the
+            # right order, so use min/max to be safe
+            lowest = min(low_value, high_value, central)
+            highest = max(low_value, high_value, central)
+
+            y_points.append((y_lo, y_hi, central, lowest, highest))
         out.append((pt_lo, pt_hi, y_points))
 
     return out
@@ -384,8 +429,8 @@ def compute_bk_only_theory_points(pattern, frag_type):
 
 
 FRAG_SCHEMES = [
-    ("files/central/D0_incl_BCFY_An0n_Pb_y*.dat", "BCFY", "h", 0.06, "BCFY", "empty"),
-    ("files/central/D0_incl_KniehlKramer_An0n_Pb_y*.dat", "Kniehl-Kramer", "^", -0.06, "KniehlKramer", "empty"),
+    ("files/central/D0_incl_BCFY_An0n_Pb_y*.dat", "BCFY", "+", 0.06, "BCFY", "empty"),
+    ("out/kk_scale/factor_1.0/D0_incl_KniehlKramer_An0n_Pb_y*.dat", "Kniehl-Kramer", "o", -0.06, "KniehlKramer", "empty"),
     (
         "files/HymnD/member_0000/files/D0_incl_HymnD_An0n_Pb_y*.dat",
         r"HymnD",
@@ -420,7 +465,7 @@ def main():
             total_error = (stat ** 2 + syst ** 2) ** 0.5
             box = plt.Rectangle(
                 (y_lo, value - total_error), y_hi - y_lo, 2 * total_error,
-                fill=False, edgecolor=color, linewidth=1.2,
+                fill=True, facecolor=color, alpha=0.15, edgecolor=color, linewidth=1.2,
             )
             plt.gca().add_patch(box)
 
@@ -431,25 +476,41 @@ def main():
             color = colors[pt_lo]
             y_centers = []
             values = []
+            point_dx = 0.08 if frag_type == "LHAPDF" else (-0.08 if frag_type == "BCFY" else 0.0)
             for y_lo, y_hi, avg in y_points:
-                y_centers.append(0.5 * (y_lo + y_hi))
+                y_centers.append(0.5 * (y_lo + y_hi) + point_dx)
                 values.append(avg)
             if style == "hatched":
      
                 pc = plt.scatter(
                     y_centers, values, marker=marker, s=36,
-                    facecolor=color, edgecolor="black", linewidth=0.8,
+                    facecolor=color, edgecolor="black", linewidth=0.8, zorder=3,
                 )
                 pc.set_hatch("///")
             else:
                 facecolor = color if style == "solid" else "none"
-                plt.plot(y_centers, values, marker, color=color, markerfacecolor=facecolor)
+                markersize = 5 if marker == "o" else (8 if marker == "." else None)
+                if style == "empty":
+                    # Open marker has no fill to block the band underneath
+                    # from showing through its interior -- mask it out with
+                    # a solid white circle first, then draw the outline.
+                    plt.plot(
+                        y_centers, values, marker, color="white", markerfacecolor="white",
+                        markersize=markersize, zorder=2,
+                    )
+                plt.plot(
+                    y_centers, values, marker, color=color, markerfacecolor=facecolor,
+                    markersize=markersize, zorder=3,
+                )
 
 
     bands_drawn = {}
     for pattern, frag_label, marker, dx, frag_type, style in FRAG_SCHEMES:
         if frag_type == "LHAPDF":
             band, bk_included = compute_combined_theory_points()
+        elif frag_type == "KniehlKramer":
+            band = compute_kniehlkramer_scale_theory_points()
+            bk_included = False
         else:
             # band = compute_bk_only_theory_points(pattern, frag_type)
             # bk_included = band is not None
@@ -457,14 +518,27 @@ def main():
         if band is None:
             continue
         bands_drawn[frag_type] = bk_included
+        # Semi-transparent shaded box per scheme instead of error-bar caps,
+        # same style for both -- separated by the dx offset instead of a
+        # hatch/fill distinction.
+        box_width = 0.02
+        box_dx = 0.08 if frag_type == "LHAPDF" else 0.0
         for pt_lo, pt_hi, y_points in band:
             color = colors[pt_lo]
             for y_lo, y_hi, central, low, high in y_points:
-                y_center = 0.5 * (y_lo + y_hi)
-                plt.errorbar(
-                    [y_center], [central], yerr=[[central - low], [high - central]],
-                    fmt="none", ecolor=color, elinewidth=1.2, capsize=4,
+                y_center = 0.5 * (y_lo + y_hi) + box_dx
+                box = plt.Rectangle(
+                    (y_center - box_width / 2, low), box_width, high - low,
+                    facecolor=color, edgecolor="none", alpha=0.85,
+                    fill=True, zorder=1,
                 )
+                plt.gca().add_patch(box)
+                cap_half_width = box_width * 0.75
+                for y_edge in (low, high):
+                    plt.plot(
+                        [y_center - cap_half_width, y_center + cap_half_width],
+                        [y_edge, y_edge], color=color, linewidth=1.0, zorder=1,
+                    )
 
     # legend for the theory schemes
     handles = []
@@ -480,6 +554,7 @@ def main():
             one_handle = plt.Line2D(
                 [0], [0], color="black", marker=marker, linestyle="",
                 markerfacecolor="black" if style == "solid" else "none", label=frag_label,
+                markersize=5 if marker == "o" else (8 if marker == "." else None),
             )
         handles.append(one_handle)
 
@@ -493,7 +568,10 @@ def main():
     # legend for the CMS pT bins
     style_handles = []
     for pt_lo in colors:
-        patch = Patch(fill=False, edgecolor=colors[pt_lo], linewidth=1, label=labels[pt_lo])
+        patch = Patch(
+            fill=True, facecolor=colors[pt_lo], alpha=0.15,
+            edgecolor=colors[pt_lo], linewidth=1, label=labels[pt_lo],
+        )
         style_handles.append(patch)
     plt.legend(
         handles=style_handles, title="CMS data", frameon=False,
@@ -528,7 +606,14 @@ def main():
         else:
             caption_lines[-1] += r"."
 
-    other_bk_only = [ft for ft in ("BCFY", "KniehlKramer") if bands_drawn.get(ft)]
+    if "KniehlKramer" in bands_drawn:
+        caption_lines.append(
+            r"\textbf{Kniehl-Kramer band.} Factorization-scale variation "
+            r"($Q=0.5$-$2\times \sqrt{m_c^2+k_{D\perp}^2}$) only;"
+        )
+        caption_lines.append(r"no fit-replica study for this fixed analytic form.")
+
+    other_bk_only = [ft for ft in ("BCFY",) if bands_drawn.get(ft)]
     if other_bk_only:
         caption_lines.append(
             r"\textbf{" + "/".join(other_bk_only) + r" bands.} BK initial-condition "

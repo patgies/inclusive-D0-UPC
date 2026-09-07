@@ -158,7 +158,7 @@ def main():
     results_g1 = load_results("files/central/D0_incl_KniehlKramer_An0n_G1_Pb_y*.dat")
     results_no_g1 = load_results("files/central/D0_incl_KniehlKramer_An0n_Pb_y*.dat")
     results_bcfy = load_results("files/central/D0_incl_BCFY_An0n_Pb_y*.dat")
-    results_lhapdf = load_results("files/central/D0_incl_LHAPDF_An0n_Pb_y*.dat")
+    results_lhapdf = load_results("out/HymnD_scale/factor_1.0/D0_incl_HymnD_An0n_Pb_y*.dat")
     hymnd_band = load_hymnd_band("files/HymnD/member_*")
     if hymnd_band:
         results_hymnd = None
