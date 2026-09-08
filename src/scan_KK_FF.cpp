@@ -1,4 +1,4 @@
-// Standalone diagnostic: dump the DGLAP-evolved Kniehl & Kramer c->D0
+// DGLAP-evolved Kniehl & Kramer c->D0
 // fragmentation function D(z, Q^2) at several mu values, for a couple of
 // reference pT points, to visualize how the shape shifts with the
 // evolution scale (see python/plot_kk_ff_shapes.py).
@@ -30,11 +30,6 @@ int main() {
     for (double pT : pTvals) {
         double mt = std::sqrt(mc*mc + pT*pT);
 
-        // Raw (non-evolved) charm input -- same curve regardless of pT, but
-        // repeated per-pT so each panel is self-contained.
-        // (No bottom curve: GetD dropped the bottom-seeded channel -- its
-        // evolved contribution was negligible and its own QCDNUM wiring
-        // buggy; see kk_grid.cpp.)
         DumpCurve(pT, "IC (μ=mc)", KKInitialConditionC);
 
         for (double scale_factor : scale_factors) {

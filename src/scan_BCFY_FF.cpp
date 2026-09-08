@@ -1,4 +1,4 @@
-// Standalone diagnostic: dump the DGLAP-evolved Braaten-Cheung-Fleming-Yuan
+// DGLAP-evolved Braaten-Cheung-Fleming-Yuan
 // (BCFY) c->D0 fragmentation function D(z, Q^2) at several mu values, for a
 // couple of reference pT points, to visualize how the shape shifts with the
 // evolution scale (see python/plot_kk_ff_shapes.py for the KK analogue).

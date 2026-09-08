@@ -1,6 +1,6 @@
 
 # QCDNum (used by kk_grid.cpp and bcfy_grid.cpp to DGLAP-evolve the
-# Kniehl & Kramer and BCFY fragmentation functions, respectively). Vendored
+# Kniehl & Kramer and BCFY fragmentation functions, respectively). 
 # under QCDnum/ (header + static libs only) so this project builds
 # standalone, without needing a QCDNum source/build tree present on the
 # machine. Override with -DQCDNUM_DIR=... to point at a different build

@@ -87,9 +87,7 @@ void EnsureEvolved() {
   QCDNUM::gxmake(xmin, iwt, ng, nxin, nx, iosp);
   QCDNUM::gqmake(qq, wt, 4, nqin, nq);
 
-  // Per-process scratch weight file -- a shared path caused concurrent
-  // writers to corrupt each other's file when many (b, pT, y) points run
-  // concurrently (see kk_grid.cpp's EnsureEvolved for the same fix).
+
   std::string wtpath = "/tmp/qcdnum_timelike_bcfy_" + std::to_string(getpid()) + ".wgt";
   QCDNUM::wtfile(3, wtpath);      // itype=3: time-like wgts
   remove(wtpath.c_str());
@@ -123,7 +121,7 @@ double GetD(double x, double q2) {
   return xDtot / x;
 }
 
-}  // namespace
+}  
 
 std::unique_ptr<Interpolator> MakeBCFYInterpolator(double Q) {
   EnsureEvolved();
