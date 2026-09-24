@@ -18,8 +18,8 @@
 
 set -euo pipefail
 
-LHAPDF_DIR=${LHAPDF_DIR:-inputs/prompt-D0-1-109}
-LHAPDF_SET=${LHAPDF_SET:-prompt-D0-1-109}
+HYMND_DIR=${HYMND_DIR:-inputs/prompt-D0-1-109}
+HYMND_SET=${HYMND_SET:-prompt-D0-1-109}
 OUTBASE=${OUTBASE:-out/HymnD}
 MEMBERS=${MEMBERS:-$(seq 0 101)}
 
@@ -27,7 +27,7 @@ mkdir -p "$OUTBASE"
 
 for member in $MEMBERS; do
 	member_tag=$(printf '%04d' "$member")
-	member_file="$LHAPDF_DIR/${LHAPDF_SET}_${member_tag}.dat"
+	member_file="$HYMND_DIR/${HYMND_SET}_${member_tag}.dat"
 	if [[ ! -f "$member_file" ]]; then
 		echo "skipping member $member_tag: $member_file not found"
 		continue
@@ -35,8 +35,8 @@ for member in $MEMBERS; do
 
 	echo "=== member $member_tag ($(date)) ==="
 	OUTDIR="$OUTBASE/member_${member_tag}" \
-	FRAG_TYPE=LHAPDF \
-	LHAPDF_FILE="$member_file" \
+	FRAG_TYPE=HymnD \
+	HYMND_FILE="$member_file" \
 	bash run_many_Pb.sh
 done
 

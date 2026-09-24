@@ -158,7 +158,7 @@ def main():
     results_g1 = load_results("files/central/D0_incl_KniehlKramer_An0n_G1_Pb_y*.dat")
     results_no_g1 = load_results("files/central/D0_incl_KniehlKramer_An0n_Pb_y*.dat")
     results_bcfy = load_results("files/central/D0_incl_BCFY_An0n_Pb_y*.dat")
-    results_lhapdf = load_results("out/HymnD_scale/factor_1.0/D0_incl_HymnD_An0n_Pb_y*.dat")
+    results_hymnd = load_results("out/HymnD_scale/factor_1.0/D0_incl_HymnD_An0n_Pb_y*.dat")
     hymnd_band = load_hymnd_band("files/HymnD/member_*")
     if hymnd_band:
         results_hymnd = None
@@ -216,10 +216,10 @@ def main():
             cross_section_values.append(point[1])
         plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle=":")
 
-    for y in sorted(results_lhapdf):
+    for y in sorted(results_hymnd):
         if y > 2.0:
             continue
-        points = sorted(results_lhapdf[y])
+        points = sorted(results_hymnd[y])
         pt_values = []
         cross_section_values = []
         for point in points:
@@ -275,7 +275,7 @@ def main():
         Line2D([0], [0], color="black", linestyle="--", label="KniehlKramer, no G1"),
         Line2D([0], [0], color="black", linestyle=":", label="BCFY"),
         Line2D([0], [0], color="black", linestyle="-.", label=hymnd_legend_text),
-        Line2D([0], [0], color="black", linestyle=(0, (3, 1, 1, 1)), label="LHAPDF"),
+        Line2D([0], [0], color="black", linestyle=(0, (3, 1, 1, 1)), label="HymnD"),
     ]
     plt.legend(handles=style_handles, loc="lower left")
 

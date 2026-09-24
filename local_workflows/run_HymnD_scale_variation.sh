@@ -17,12 +17,12 @@
 
 set -euo pipefail
 
-LHAPDF_DIR=${LHAPDF_DIR:-inputs/prompt-D0-1-109}
-LHAPDF_SET=${LHAPDF_SET:-prompt-D0-1-109}
+HYMND_DIR=${HYMND_DIR:-inputs/prompt-D0-1-109}
+HYMND_SET=${HYMND_SET:-prompt-D0-1-109}
 OUTBASE=${OUTBASE:-out/HymnD_scale}
 SCALE_FACTORS=${SCALE_FACTORS:-"0.5 2.0"}
 
-member_file="$LHAPDF_DIR/${LHAPDF_SET}_0000.dat"
+member_file="$HYMND_DIR/${HYMND_SET}_0000.dat"
 if [[ ! -f "$member_file" ]]; then
 	echo "Error: central member file not found: $member_file" >&2
 	exit 1

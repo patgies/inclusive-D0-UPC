@@ -323,23 +323,23 @@ def compute_kniehlkramer_scale_theory_points():
     return out
 
 
-def compute_bk_posterior_theory_points(frag_type="LHAPDF"):
+def compute_bk_posterior_theory_points(frag_type="HymnD"):
     # Uncertainty source shared by every fragmentation scheme: 100 posterior
     # samples of the BK initial-condition fit ("LOmvefit": Q_{s,0}^2, e_c,
     # C^2, sigma0/2; see bk/posteriorsamples_100_LOmvefit.dat), each
     # independently BK-evolved to its own dipole amplitude
     # (data/Pb/bk_posterior/member_<NNNN>), with the fragmentation function
     # held fixed at frag_type's central member/scale,the opposite of
-    # compute_lhapdf_replica_theory_points, which varies the fragmentation
+    # compute_hymnd_replica_theory_points, which varies the fragmentation
     # function at fixed dipole. Comes from run_bk_posterior_members_oberon.sh
     # (FRAG_TYPE=<frag_type> when it was run).
     #
-    # Unlike the LHAPDF replica set, there is no posterior sample
+    # Unlike the HymnD replica set, there is no posterior sample
     # "member 0" should coincide with the real central (data/Pb/mve)
     # dipole,the 100 samples are independent draws from the fit
     # posterior, not variations around a labeled central member. So instead
     # of splitting off one member as "the" central value (as
-    # compute_lhapdf_replica_theory_points does), we take the *fractional*
+    # compute_hymnd_replica_theory_points does), we take the *fractional*
     # 16th/84th percentile spread of all 100 samples around their own
     # median.
     member_dirs = sorted(glob.glob("bk/bk_posterior/member_*"))
@@ -373,15 +373,15 @@ def compute_bk_posterior_theory_points(frag_type="LHAPDF"):
 
 
 def compute_combined_theory_points():
-    # Three independent LHAPDF-curve uncertainty sources: scale variation,
+    # Three independent HymnD-curve uncertainty sources: scale variation,
     # fit (replica) uncertainty, and now the BK initial-condition
     # (posterior-sample dipole) uncertainty. Combined in quadrature since
     # each varies one thing (Q, the fragmentation-function fit, or the
     # dipole amplitude) while holding the other two fixed.
     scale = compute_hymnd_scale_theory_points()
-    # replicas = compute_lhapdf_replica_theory_points()
+    # replicas = compute_hymnd_replica_theory_points()
     replicas = None
-    # bk = compute_bk_posterior_theory_points("LHAPDF")
+    # bk = compute_bk_posterior_theory_points("HymnD")
     bk = None
     if scale is None:
         return None, False
@@ -448,7 +448,7 @@ FRAG_SCHEMES = [
     (
         "files/HymnD/member_0000/files/D0_incl_HymnD_An0n_Pb_y*.dat",
         r"HymnD",
-        ".", -0.12, "LHAPDF", "solid",
+        ".", -0.12, "HymnD", "solid",
     ),
 ]
 
@@ -490,7 +490,7 @@ def main():
             color = colors[pt_lo]
             y_centers = []
             values = []
-            point_dx = 0.08 if frag_type == "LHAPDF" else (-0.08 if frag_type == "BCFY" else 0.0)
+            point_dx = 0.08 if frag_type == "HymnD" else (-0.08 if frag_type == "BCFY" else 0.0)
             for y_lo, y_hi, avg in y_points:
                 y_centers.append(0.5 * (y_lo + y_hi) + point_dx)
                 values.append(avg)
@@ -520,7 +520,7 @@ def main():
 
     bands_drawn = {}
     for pattern, frag_label, marker, dx, frag_type, style in FRAG_SCHEMES:
-        if frag_type == "LHAPDF":
+        if frag_type == "HymnD":
             band, bk_included = compute_combined_theory_points()
         elif frag_type == "KniehlKramer":
             band = compute_kniehlkramer_scale_theory_points()
@@ -536,7 +536,7 @@ def main():
         # same style for both -- separated by the dx offset instead of a
         # hatch/fill distinction.
         box_width = 0.02
-        box_dx = 0.08 if frag_type == "LHAPDF" else 0.0
+        box_dx = 0.08 if frag_type == "HymnD" else 0.0
         for pt_lo, pt_hi, y_points in band:
             color = colors[pt_lo]
             for y_lo, y_hi, central, low, high in y_points:
@@ -606,13 +606,13 @@ def main():
 
     # Figure caption,
     caption_lines = []
-    if "LHAPDF" in bands_drawn:
+    if "HymnD" in bands_drawn:
         caption_lines.append(
             r"\textbf{HymnD band.} Combines in quadrature: factorization-scale "
             r"variation ($Q=0.5$-$2\times \sqrt{m_c^2+k_{D\perp}^2}$),"
         )
         caption_lines.append(r"fit uncertainty from the 100 HymnD fit replicas")
-        if bands_drawn["LHAPDF"]:
+        if bands_drawn["HymnD"]:
             caption_lines[-1] += r","
             caption_lines.append(
                 r"and BK initial-condition uncertainty from a 100-sample dipole-amplitude posterior."

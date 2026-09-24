@@ -21,8 +21,8 @@ set -euo pipefail
 BK_DIR=${BK_DIR:-bk/bk_posterior}
 OUTBASE=${OUTBASE:-out/bk_posterior}
 MEMBERS=${MEMBERS:-$(seq 0 99)}
-FRAG_TYPE=${FRAG_TYPE:-LHAPDF}
-LHAPDF_FILE=${LHAPDF_FILE:-inputs/prompt-D0-1-109/prompt-D0-1-109_0000.dat}
+FRAG_TYPE=${FRAG_TYPE:-HymnD}
+HYMND_FILE=${HYMND_FILE:-inputs/prompt-D0-1-109/prompt-D0-1-109_0000.dat}
 
 mkdir -p "$OUTBASE"
 
@@ -39,7 +39,7 @@ for member in $MEMBERS; do
 	DIPOLE_DIR="$member_dir" \
 	DIPOLE_X0=0.01 \
 	FRAG_TYPE="$FRAG_TYPE" \
-	LHAPDF_FILE="$LHAPDF_FILE" \
+	HYMND_FILE="$HYMND_FILE" \
 	bash run_many_Pb.sh
 done
 
