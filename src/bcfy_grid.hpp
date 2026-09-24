@@ -6,12 +6,8 @@
 
 // Builds a z-interpolator for the DGLAP-evolved Braaten-Cheung-Fleming-Yuan
 // (BCFY) c -> D0 fragmentation function at a fixed factorisation scale Q
-// (GeV). Mirrors kk_grid.hpp's MakeKniehlKramerInterpolator.
-//
-// The pseudoscalar (c -> D0 direct) and vector (c -> D*0, feeding down to
-// D0) channels are evolved as two independent DGLAP sets, both starting at
-// mu0 = mc, and combined after evolution (see bcfy_grid.cpp and
-// testjobs/bcfyD0.cc in QCDnumFF ).
+// (GeV). The evolution was done in another repository with EKO package, this reads the
+// resulting grid, inputs/bcfy_eko/bcfy_eko_0000.dat.
 std::unique_ptr<Interpolator> MakeBCFYInterpolator(double Q);
 
 #endif

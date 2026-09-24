@@ -1,13 +1,3 @@
-
-# QCDNum (used by kk_grid.cpp and bcfy_grid.cpp to DGLAP-evolve the
-# Kniehl & Kramer and BCFY fragmentation functions, respectively). 
-# under QCDnum/ (header + static libs only) so this project builds
-# standalone, without needing a QCDNum source/build tree present on the
-# machine. Override with -DQCDNUM_DIR=... to point at a different build
-# instead.
-set(QCDNUM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../QCDnum" CACHE PATH
-	"Path to a QCDNum install (containing include/QCDNUM/QCDNUM.h, lib/*.a)")
-
 add_library(
 	amplitude
 	STATIC
@@ -29,37 +19,22 @@ add_executable(
 	bcfy_grid.cpp
 )
 
-target_include_directories(
-	dipole
-	PRIVATE
-	${QCDNUM_DIR}/include
-)
-
 target_link_libraries(
 	dipole
 	PRIVATE
 	amplitude
 	GSL::gsl
 	GSL::gslcblas
-	${QCDNUM_DIR}/lib/libQCDNUMCCWrap.a
-	${QCDNUM_DIR}/lib/libQCDNUM.a
-	gfortran
 	-static-libstdc++
 	-static-libgcc
 )
 
-# Diagnostic: dumps D(z,Q^2) at a few Q values for
-# python/plot_kk_ff_shapes.py. Not part of the physics pipeline.
+
 add_executable(
 	scan_KK_FF
 	scan_KK_FF.cpp
 	kk_grid.cpp
-)
-
-target_include_directories(
-	scan_KK_FF
-	PRIVATE
-	${QCDNUM_DIR}/include
+	hymnd_grid.cpp
 )
 
 target_link_libraries(
@@ -68,9 +43,6 @@ target_link_libraries(
 	amplitude
 	GSL::gsl
 	GSL::gslcblas
-	${QCDNUM_DIR}/lib/libQCDNUMCCWrap.a
-	${QCDNUM_DIR}/lib/libQCDNUM.a
-	gfortran
 	-static-libstdc++
 	-static-libgcc
 )
@@ -78,19 +50,13 @@ target_link_libraries(
 set_target_properties(scan_KK_FF PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Diagnostic: dumps the DGLAP-evolved BCFY D(z, Q^2) at a few Q values,
-# analogous to scan_KK_FF above. Not part of the physics pipeline.
+
 add_executable(
 	scan_BCFY_FF
 	scan_BCFY_FF.cpp
 	bcfy_grid.cpp
+	hymnd_grid.cpp
 	fragmentation.cpp
-)
-
-target_include_directories(
-	scan_BCFY_FF
-	PRIVATE
-	${QCDNUM_DIR}/include
 )
 
 target_link_libraries(
@@ -99,9 +65,6 @@ target_link_libraries(
 	amplitude
 	GSL::gsl
 	GSL::gslcblas
-	${QCDNUM_DIR}/lib/libQCDNUMCCWrap.a
-	${QCDNUM_DIR}/lib/libQCDNUM.a
-	gfortran
 	-static-libstdc++
 	-static-libgcc
 )

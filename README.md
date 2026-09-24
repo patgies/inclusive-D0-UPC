@@ -72,7 +72,7 @@ The code supports the following channels:
 
 These are controlled through the environment variable `CHANNEL`.
 
-The fragmentation function is selected through `FRAG_TYPE`. `BCFY` and `KniehlKramer` are both DGLAP-evolved with QCDNUM (LO Altarelli-Parisi, starting scale `mu0=mc`) from their perturbative input up to the factorization scale `Q = SCALE_FACTOR * mt0` (see [src/bcfy_grid.cpp](src/bcfy_grid.cpp) and [src/kk_grid.cpp](src/kk_grid.cpp)):
+The fragmentation function is selected through `FRAG_TYPE`. `BCFY` and `KniehlKramer` are both DGLAP-evolved (LO time-like Altarelli-Parisi, starting scale `mu0=mc`) from their perturbative input up to the factorization scale `Q = SCALE_FACTOR * mt0`. The evolution is done with [eko](https://github.com/NNPDF/eko) in the repository [EKO-FF](https://github.com/patgies/EKO-FF) and stored as grids in `inputs/bcfy_eko/` and `inputs/kk_eko/`, which [src/bcfy_grid.cpp](src/bcfy_grid.cpp) and [src/kk_grid.cpp](src/kk_grid.cpp) read (the grids cover `Q = 1.5–50 GeV`, `z = 0.05–1`; outside that `Q` is freezed):
 
 - `BCFY`: E. Braaten, K.-m. Cheung, S. Fleming, and T.-C. Yuan, "Perturbative QCD fragmentation functions as a model for heavy quark fragmentation," Phys. Rev. D 51, 4819–4829 (1995). The pseudoscalar (c->D0) and vector (c->D*0) channels are evolved as two independent DGLAP sets and combined after evolution with the D*0->D0 branching fraction and feed-down kinematics.
 - `KniehlKramer`: B. A. Kniehl and G. Kramer, "Charmed-hadron fragmentation functions from CERN LEP1 revisited," Phys. Rev. D 74 (2006) 037502 [arXiv:hep-ph/0607306].

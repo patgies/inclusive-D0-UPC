@@ -40,7 +40,7 @@ mkdir -p "$OUTBASE"
 
 # run_KniehlKramer_scale_variation.sh calls "bash run_many_Pb.sh" (no
 # directory prefix), and run_many_Pb.sh in turn opens build/bin/dipole,
-# data/Pb/mve, QCDnum/timelike.wgt and inputs/Gamma_AA.dat all as paths
+# data/Pb/mve and inputs/Gamma_AA.dat (plus the inputs/bcfy_eko, inputs/kk_eko grids) all as paths
 # relative to the repo root. So everything has to run with CWD at the repo
 # root, and run_many_Pb.sh (which only physically lives in local_workflows/)
 # needs to be reachable there too -- hence the symlink.
