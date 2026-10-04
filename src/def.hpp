@@ -11,37 +11,38 @@ struct parameters
 {
     AmplitudeLib *dipole;
 
-    //Kinematics (charm/D0) 
-    double pD0;     // target D0 transverse momentum (the produced hadron, not the charm quark)
-    double m, m2;   // charm mass, mass^2
-    double y;       // rapidity
-    double ss;      // sqrt(s)
-    double xbj;     // representative xbj (at z=1), used only to seed the interpolator cache
+    // Kinematics
+    double pD0;     // D0 transverse momentum
+    double m, m2;   // charm mass and its square
+    double y;       // D0 rapidity
+    double ss;      // sqrt(s_NN)
+    double xbj;     // x of the dipole amplitude
 
     // Fragmentation (c -> D0)
-    double r;            // BCFY non-perturbative parameter
-    double N_kk, eps_kk; // Kniehl & Kramer parameters (N=0.694, eps=0.101)
+    double r;            // BCFY parameter
+    double N_kk, eps_kk; // Kniehl-Kramer parameters
     FragmentationType frag_type = FragmentationType::BCFY;
-    double zmin, zmax;   // fragmentation z integration range
+    double z_h_min, z_h_max;   // range of the z_h integral (pc = pD0/z_h)
 
-    //Photon flux
-    double alpha, Z, mn, S;
+    // Photon flux
+    double alpha, Z, mn, S;   // alpha_em, charge, nucleon mass, EMD area
+    std::string target = "AA";      // AA (Pb+Pb) | pA (p+Pb: Gamma_pA, no EMD factor)
     std::string channel;
-    bool gamma_aa_one = false;  // if true, force Gamma_AA(b) = 1 (no nuclear survival suppression)
+    bool gamma_aa_one = false;        // true: Gamma_AA(b) = 1
+    std::string flux_model = "EFF";   // EFF | PL | WS | TABLE
 
-    // VEGAS integration box
+    // VEGAS integration limits
     double bmin, bmax, qpmax, lmax;
     size_t calls;
 
-    // Precomputed S_k grid for momentum-space evaluation
+    // Dipole in momentum space, S(l)
     std::unique_ptr<Interpolator> Sk_interp;
 
-    // Precomputed z-interpolator for the HymnD fragmentation function,
-    // evaluated at fixed Q=m (only used when frag_type == FragmentationType::HymnD)
+    // Fragmentation function D(z_h) at the fragmentation scale
     std::unique_ptr<Interpolator> D_frag_interp;
 };
 
-// Assumes par->Sk_interp is already set (precomputed in main before parallel launch).
+// dsigma/(dy d2pD0) without prefactors. Needs par->Sk_interp and par->D_frag_interp.
 double D0CrossSection_inclusive(void* p);
 
 #endif

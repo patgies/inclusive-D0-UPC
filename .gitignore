@@ -7,12 +7,15 @@ __pycache__/
 CMakeCache.txt
 CMakeFiles/
 FragFunc/
+input/flux_cache/
 pdf/
 
 # Oberon/local-workflow outputs 
-local_workflows/oberon/
-local_workflows/**/oberon/
-local_workflows/**/*oberon*
-local_workflows/**/*.out
-local_workflows/**/*.log
-local_workflows/**/*.err
+run_scripts/oberon/
+run_scripts/**/oberon/
+run_scripts/**/*oberon*
+run_scripts/**/*.out
+run_scripts/**/*.log
+run_scripts/**/*.err
+
+notes/

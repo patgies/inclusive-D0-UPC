@@ -1,13 +1,13 @@
 # Inclusive D0 photoproduction
 
-This project computes the inclusive D0 photoproduction cross section `dσ / (dy dp_D0)` in ultraperipheral collisions (UPCs) in the CGC framework.
-
-The code supports different UPC channels and fragmentation functions, and it can be used for proton and nuclear targets.
+This project computes the inclusive D0 photoproduction cross section `dσ / (dy d²p_D0)` in ultraperipheral collisions (UPCs) in the CGC framework. The code supports different UPC channels, photon fluxes and fragmentation functions, for proton and nuclear targets.
 
 Based on P. Gimeno-Estivill, T. Lappi, and H. Mäntysaari, *Inclusive D⁰ photoproduction in ultraperipheral collisions*, Phys. Rev. D 111, 114036 (2025) [[doi:10.1103/7741-585p](https://doi.org/10.1103/7741-585p)].
 
----
+Two notes explain the details and how to change them:
 
+- [notes_photon_flux.pdf](notes_photon_flux.pdf): the photon fluxes, the variables, and how to use another flux.
+- [notes_FF.pdf](notes_FF.pdf): the fragmentation functions and how to add another one.
 
 ## Build
 
@@ -18,84 +18,70 @@ cmake ..
 make
 ```
 
-Requirements:
+Requirements: CMake and GSL (GNU Scientific Library).
 
-- CMake
-- GSL (GNU Scientific Library)
+## Run
 
----
-
-## Basic run
-
-The core calculation lives in the C++ sources under [src](src). The analysis and plotting scripts are kept in [python](python). The main executable is built as
+The C++ sources are in [src](src), the run scripts in [run_scripts](run_scripts) and the plotting scripts in [plotting_scripts](plotting_scripts). The executable is
 
 ```bash
 ./build/bin/dipole <pD0> [<dipole_file>] <y>
-```
-
-Example:
-
-```bash
 ./build/bin/dipole 3 data/proton/mve.dat 0
 ```
 
-This prints the rapidity and differential cross section at the selected `p_D0` value.
+with `pD0` the D0 transverse momentum in GeV and `y` its rapidity. It prints `y` and the cross section, without prefactors. If the dipole file is omitted, it is read from `DIPOLE_FILE`.
 
-The arguments are:
+The run scripts loop over `pD0`, `y` and the dipole files, and can be started from any directory:
 
-- `<pD0>`: transverse momentum of the D0 meson in GeV
-- `<y>`: rapidity
-- `[<dipole_file>]`: optional dipole file; if omitted, it can be read from `DIPOLE_FILE`
+```bash
+CHANNEL=Xn0n FRAG_TYPE=BCFY ./run_scripts/run_nucleus.sh       # Pb+Pb, one run per Glauber sample b_d
+FRAG_TYPE=HymnD ./run_scripts/run_scale_variation.sh           # fragmentation scale 0.5, 1, 2 x mT
+MEMBER_SET=HymnD ./run_scripts/run_members.sh                  # HymnD replicas (or MEMBER_SET=bk, bk4param)
+./run_scripts/run_proton.sh                                    # proton with the Pb+Pb flux
+TARGET=pA ./run_scripts/run_proton.sh                          # p+Pb
+Y_VALS="0.0 1.0" PT_VALS="1.1 3.1" CALLS=1e4 ./run_scripts/run_nucleus.sh   # quick test
+```
 
-The simple example is [run_local.sh](run_local.sh).
+The cluster wrappers are in [run_scripts/roihu](run_scripts/roihu) and `run_scripts/oberon`.
 
----
+## Settings
 
-## Inputs and targets
+The settings are environment variables. The defaults are in [run_scripts/config.sh](run_scripts/config.sh).
 
-The code expects dipole input files of the form
+| Variable | Default | Values |
+|---|---|---|
+| `CHANNEL` | `An0n` | neutron class: `An0n`, `Xn0n`, `PL(AnAn)` |
+| `FLUX_MODEL` | `EFF` | photon flux: `EFF`, `PL`, `WS`, or `TABLE` with `FLUX_FILE=<file>` |
+| `TARGET` | `AA` | `AA` (Pb+Pb, 5.36 TeV) or `pA` (p+Pb, 8.16 TeV) |
+| `FRAG_TYPE` | `KniehlKramer` | fragmentation function: `BCFY`, `KniehlKramer`, `HymnD` |
+| `SCALE_FACTOR` | `1.0` | fragmentation scale `Q = SCALE_FACTOR * mT` |
+| `Y_VALS`, `PT_VALS` | see `config.sh` | rapidities and `pD0` values of the run scripts |
+| `CALLS` | `2e5` | VEGAS calls per point |
 
-- proton: `data/proton/mve.dat`
-- nucleus: `data/Pb/...` or `data/Au/...` with Glauber-sampled files such as `glauber_mve_<b>`
+- Photon flux: `EFF` is the effective flux of Eskola, Guzey, Helenius, Paakkinen and Paukkunen, Phys. Rev. C 110, 054906 (2024) [arXiv:2404.09731]. To use another flux, write it as a file with the columns `z_gamma  f(z_gamma)` and run with `FLUX_MODEL=TABLE FLUX_FILE=<file>`; no code has to be changed. See [notes_photon_flux.pdf](notes_photon_flux.pdf).
+- Fragmentation functions: `BCFY` (Braaten, Cheung, Fleming and Yuan, Phys. Rev. D 51, 4819 (1995)) and `KniehlKramer` (Kniehl and Kramer, Phys. Rev. D 74, 037502 (2006)) are evolved with DGLAP using [eko](https://github.com/NNPDF/eko) in [EKO-FF](https://github.com/patgies/EKO-FF). `HymnD` is the set of Epele, Hekhorn, Helenius, Paukkunen and Zurita (arXiv:2609.10327). See [notes_FF.pdf](notes_FF.pdf).
 
-Dipole parametrization MVe from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole).
+## Folders
 
----
+- `data/`: the dipole files. Proton: `data/proton/mve.dat`. Nucleus: `data/Pb/mve/glauber_mve_<b_d>`, one Glauber-sampled file per dipole impact parameter `b_d`. MVe parametrization from [rcbkdipole](https://github.com/hejajama/rcbkdipole).
+- `input/BCFY_EKO/`, `input/KK_EKO/`, `input/HymnD/`: the fragmentation function grids.
+- `input/WS_photon_flux/`: the survival factor `Gamma_AA(b)`, made with [src/make_gamma_aa.py](src/make_gamma_aa.py).
+- `input/Starlight_photon_flux/`: the flux tables of P. Paakkinen, and the same in the `TABLE` format, made with [src/make_flux_table.py](src/make_flux_table.py).
+- `input/flux_cache/`: the `EFF` flux, saved the first time it is computed. It can be deleted at any time.
+- `input/BK/`: the posterior samples of the BK initial condition. `run_scripts/setup_bk_posterior_links.sh` links the Pb samples as `data/Pb/bk_posterior/member_NNNN/`.
+- `input/CMS_data/`: the CMS D0 cross sections from HEPData.
+- `output/<CHANNEL>/`: the results, in `central_values/<FRAG>/`, `scale_variation/<FRAG>/factor_<factor>/`, `HymnD_band/`, `bk_band/`, `bk4param_band/` and `proton_baseline/<FRAG>/`. The p+Pb results are in `output/pPb/`.
 
-## UPC channel and fragmentation functions
+## Uncertainty bands
 
-The code supports the following channels:
+[plotting_scripts/cms_comparison.py](plotting_scripts/cms_comparison.py) compares the results with the CMS data. The band of the HymnD curve is the fragmentation scale variation, `Q` between `0.5` and `2` times the central scale (`run_scale_variation.sh`).
 
-- `Xn0n`
-- `An0n`
-- `PL(AnAn)`
-
-These are controlled through the environment variable `CHANNEL`.
-
-The fragmentation function is selected through `FRAG_TYPE`. `BCFY` and `KniehlKramer` are both DGLAP-evolved (LO time-like Altarelli-Parisi, starting scale `mu0=mc`) from their perturbative input up to the factorization scale `Q = SCALE_FACTOR * mt0`. The evolution is done with [eko](https://github.com/NNPDF/eko) in the repository [EKO-FF](https://github.com/patgies/EKO-FF) and stored as grids in `inputs/bcfy_eko/` and `inputs/kk_eko/`, which [src/bcfy_grid.cpp](src/bcfy_grid.cpp) and [src/kk_grid.cpp](src/kk_grid.cpp) read (the grids cover `Q = 1.5–50 GeV`, `z = 0.05–1`; outside that `Q` is freezed):
-
-- `BCFY`: E. Braaten, K.-m. Cheung, S. Fleming, and T.-C. Yuan, "Perturbative QCD fragmentation functions as a model for heavy quark fragmentation," Phys. Rev. D 51, 4819–4829 (1995). The pseudoscalar (c->D0) and vector (c->D*0) channels are evolved as two independent DGLAP sets and combined after evolution with the D*0->D0 branching fraction and feed-down kinematics.
-- `KniehlKramer`: B. A. Kniehl and G. Kramer, "Charmed-hadron fragmentation functions from CERN LEP1 revisited," Phys. Rev. D 74 (2006) 037502 [arXiv:hep-ph/0607306].
-- `HymnD` 
-
-### Uncertainty bands
-
-The comparison plots in [python/cms_comparison.py](python/cms_comparison.py) include the dominant theory uncertainty for the HymnD curve:
-
-- a factorization-scale band from varying `Q` by a factor of `0.5` and `2` around the central scale.
-
-The BK initial-condition uncertainty is only about $2\%$ in the relevant bins and is therefore not included in the displayed public band. The BK posterior samples are still available in the output directories under `bk/bk_posterior/member_*/...`, and the proton BK parameter ensemble used to generate the proton-band member files is stored in `bk/bk4param/theta_100_mve.dat`. The corresponding generated proton member dipoles live in `bk/bk4param/mve/member_*/...`, and the HymnD replica set is also kept in `files/HymnD/member_*/...` for reference.
-
-The final CMS-style theory band keeps the dominant factorization-scale variation, while the small BK contribution and the small HymnD replica contribution are omitted. The BK uncertainty is an independent variation of the dipole initial condition: the code samples many posterior configurations of the BK fit and evolves each one separately, while keeping the fragmentation function fixed. 
-
----
+Two other uncertainties can be computed with `run_members.sh` but are not in the plot: the HymnD replicas (`MEMBER_SET=HymnD`) and the BK initial condition (`MEMBER_SET=bk` for Pb, `bk4param` for the proton), which is about 2% in the CMS bins.
 
 ## Differential cross section and normalization
 
-The raw output from the large runs is per impact parameter `b`. To obtain a final `p_D0` spectrum, one still needs to integrate over `b` (for example by Simpson's rule, multiplied by `2πb`).
+The output of the nuclear runs is per dipole impact parameter `b_d`, in files with the columns `b_d  pD0  dsigma_dyd2pD0`. The plotting scripts integrate over `b_d` (Simpson's rule, multiplied by `2πb_d`) and multiply by the prefactors.
 
-For a proton target, the impact-parameter integral is effectively absorbed into the proton normalization `16.36` mb from the MVe dipole parametrization from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole). The code includes the standard overall prefactor associated with the photon flux. In the nuclear case, the photon flux includes the spatial resolution of the target through the impact-parameter dependence of the nuclear profile, as discussed in K. J. Eskola, V. Guzey, I. Helenius, P. Paakkinen, and H. Paukkunen, "Spatial resolution of dijet photoproduction in near-encounter ultraperipheral nuclear collisions," Phys. Rev. C 110, 054906 (2024).
+For a proton target, the impact-parameter integral is replaced by the proton normalization `16.36` mb of the MVe dipole parametrization.
 
 Units are GeV throughout.
-
----

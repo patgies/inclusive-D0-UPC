@@ -1,10 +1,9 @@
 #include "amplitudelib.hpp"
 #include "def.hpp"
 #include "tools.hpp"
-#include "gamma_aa.hpp"
+#include "photon_flux.hpp"
 #include "interpolation.hpp"
 #include "fourier.h"
-#include "fragmentation.hpp"
 #include "hymnd_grid.hpp"
 #include "kk_grid.hpp"
 #include "bcfy_grid.hpp"
@@ -50,14 +49,12 @@ int main(int argc, char* argv[])
     inst.SetOutOfRangeErrors(false);
     inst.SetInterpolationMethod(LINEAR_LINEAR);
 
-    // Some dipole files miss x0 in the header, so fix it here if needed.
+    // Some dipole files have no x0 in the header.
     if (getenv("DIPOLE_X0")) {
         inst.SetX0(StrToReal(getenv("DIPOLE_X0")));
     }
 
     gsl_set_error_handler_off();
-
-    load_data_and_initialize("./inputs/Gamma_AA.dat");
 
     parameters param;
     param.dipole = &inst;
@@ -65,7 +62,7 @@ int main(int argc, char* argv[])
     param.pD0 = pD0;
     param.m   = 1.5;
     param.m2  = param.m * param.m;
-    param.ss  = 5360.0;
+    set_collision_parameters(&param);
 
     param.r            = 0.1;
     param.N_kk         = 0.694;
@@ -93,7 +90,7 @@ int main(int argc, char* argv[])
 
     string hymnD_file = getenv("HYMND_FILE")
         ? getenv("HYMND_FILE")
-        : "inputs/prompt-D0-1-109/prompt-D0-1-109_0000.dat";
+        : "input/HymnD/prompt-D0-1-109_0000.dat";
     const int hymnD_charm_flavor = 4;
     if (param.frag_type == FragmentationType::HymnD) {
         param.D_frag_interp = MakeHymnDZInterpolator(hymnD_file, hymnD_charm_flavor, frag_scale);
@@ -104,21 +101,29 @@ int main(int argc, char* argv[])
     if (param.frag_type == FragmentationType::BCFY) {
         param.D_frag_interp = MakeBCFYInterpolator(frag_scale);
     }
-    param.zmin = 0.05;
-    param.zmax = 1.0;
+    param.z_h_min = 0.05;
+    param.z_h_max = 1.0;
 
-    param.alpha   = 1.0/137.0;
-    param.Z       = 82.0;
-    param.mn      = (208 * 0.931) / 208;
-    param.S       = pow(17.4, 2) / pow(0.197327, 2);
-    param.channel = getenv("CHANNEL") ? getenv("CHANNEL") : "An0n";
-    param.gamma_aa_one = getenv("GAMMA_AA_ONE") != nullptr;
-
-    param.bmin    = 14.2 / 0.197327;
-    param.bmax    = 650.0;
+    try {
+        init_photon_flux(&param);
+    } catch (const std::exception& e) {
+        cerr << "Error: " << e.what() << endl;
+        return 1;
+    }
     param.qpmax   = 800.0;
     param.lmax    = 50.0;
-    param.calls   = 2e5;
+    param.calls   = getenv("CALLS") ? (size_t)StrToReal(getenv("CALLS")) : (size_t)2e5;
+
+    // Upper limit of the b integral: the flux is zero beyond 60/(z_gamma*mn).
+    // z_gamma_min is the smallest photon energy fraction possible (z_h = 1).
+    double z_gamma_min = mt0 * exp(y) / param.ss;
+    param.bmax   = 60.0 / (z_gamma_min * param.mn);
+    try {
+        require_flux_covers(z_gamma_min, &param);
+    } catch (const std::exception& e) {
+        cerr << "Error: " << e.what() << endl;
+        return 1;
+    }
 
     init_workspace_fourier(1000);
     set_fourier_precision(1.0e-6, 1.0e-6);
@@ -137,7 +142,9 @@ int main(int argc, char* argv[])
             break;
     }
     cout << endl;
+    cout << "# target        : " << param.target << " (sqrt(s_NN) = " << param.ss << " GeV)" << endl;
     cout << "# channel       : " << param.channel << endl;
+    cout << "# flux          : " << photon_flux_info() << endl;
     cout << "# y  dsigma_dyd^2pD0" << endl;
 
     param.y = y;
