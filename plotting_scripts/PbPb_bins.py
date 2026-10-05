@@ -16,6 +16,7 @@ import numpy as np
 from scipy.integrate import simpson
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 from matplotlib.ticker import MultipleLocator, ScalarFormatter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -36,6 +37,8 @@ FRAGS = {
     "HymnD": ("HymnD", "#b2182b", ":"),
 }
 SCALE_FACTORS = ["0.5", "2.0"]
+# legend entry of the scale-variation bands (as in diffractive-D0-UPC)
+BAND_HANDLE = Patch(facecolor="0.3", alpha=0.25, edgecolor="none", label=r"$\mu_F \in [0.5, 2]\, m_t$")
 
 # Panels (pT bin, y bin edges, draw the CMS data) of the two figures.
 # Fig. 9 of arXiv:2606.05469: the CMS bins. CMS has one y bin for 2 < pT < 5 GeV.
@@ -107,22 +110,26 @@ def style_panel(ax, pt_lo, pt_hi, y_min, y_max, top, legend_entries=0, sublabel=
     # Axes, ticks and pT label of one panel (style of diffractive-D0-UPC).
     ax.set_xlim(y_min, y_max)
     # more room above the data in the panel with the legend
-    # the legend takes about 0.12 of the panel height per row, from 0.93 down
-    automatic = (1.05 / (0.91 - 0.12 * legend_entries) if legend_entries else 1.25) * top
+    # the legend takes about 0.12 of the panel height per row, from 0.91 down
+    automatic = (1.05 / (0.89 - 0.12 * legend_entries) if legend_entries else 1.25) * top
     ax.set_ylim(0, Y_AXIS_MAX.get((pt_lo, pt_hi), automatic))
     ax.xaxis.set_major_locator(MultipleLocator(1))
     ax.tick_params(labelsize=30, pad=10)
-    ax.tick_params(which="major", length=9, width=1.2, color="black")
-    ax.tick_params(which="minor", length=4.5, width=1.0, color="black")
+    # grey tick marks, black tick labels
+    ax.tick_params(which="major", length=9, width=1.2, color="0.4", labelcolor="black")
+    ax.tick_params(which="minor", length=4.5, width=1.0, color="0.4")
     formatter = TrimmedFormatter(useMathText=True)
     formatter.set_powerlimits((-2, 2))
+    # the x10^n label in black, a little above the frame
     ax.yaxis.get_offset_text().set_fontsize(30)
+    ax.yaxis.get_offset_text().set_color("black")
+    ax.yaxis.OFFSETTEXTPAD = 10
     ax.yaxis.set_major_formatter(formatter)
-    ax.text(0.95, 0.93, rf"${pt_lo:g} < p_{{D^0\perp}} < {pt_hi:g}$ GeV", transform=ax.transAxes,
-            ha="right", va="top", fontsize=25, bbox=dict(facecolor="white", edgecolor="none", pad=3),
+    ax.text(0.94, 0.91, rf"$p_{{D^0\perp}} \in ({pt_lo:g}, {pt_hi:g})$ GeV", transform=ax.transAxes,
+            ha="right", va="top", fontsize=28, bbox=dict(facecolor="white", edgecolor="none", pad=3),
             zorder=10)
     if sublabel:
-        ax.text(0.95, 0.80, sublabel, transform=ax.transAxes, ha="right", va="top", fontsize=25,
+        ax.text(0.94, 0.78, sublabel, transform=ax.transAxes, ha="right", va="top", fontsize=28,
                 linespacing=1.5, bbox=dict(facecolor="white", edgecolor="none", pad=3), zorder=10)
 
 
@@ -141,7 +148,7 @@ def draw_cms(ax, rows):
 def finish(fig, axes, handles, filename, legend_title=None, labelspacing=0.55):
     # Legend in the first panel, axis titles, and save.
     # legend in a white box, a little below the top; the pT and FF labels are drawn on top of the box
-    legend = axes.flat[0].legend(handles=handles, loc="upper left", bbox_to_anchor=(0.03, 0.93), fontsize=26,
+    legend = axes.flat[0].legend(handles=handles, loc="upper left", bbox_to_anchor=(0.04, 0.91), fontsize=26,
                                  frameon=True, facecolor="white", edgecolor="none", framealpha=1.0,
                                  title=legend_title, title_fontsize=26, alignment="left",
                                  labelspacing=labelspacing, borderpad=0.15, borderaxespad=0.25, handlelength=1.3,
@@ -172,14 +179,15 @@ def draw(panels, filename, cms=None, frag_runs=None, sublabel=FLUX_LABEL):
     y_min = min(panel[2][0] for panel in panels)
     y_max = max(panel[2][-1] for panel in panels)
     has_cms = cms is not None and any(panel[3] for panel in panels)
-    n_legend = len(frag_runs) + (1 if has_cms else 0)
+    n_legend = len(frag_runs) + 1 + (1 if has_cms else 0)   # + the band entry
 
     for ax, (pt_lo, pt_hi, y_edges, show_cms) in zip(axes.flat, panels):
         top = 0.0
         for frag, runs in frag_runs.items():
             _, color, linestyle = FRAGS[frag]
             central, low, high = band(runs, pt_lo, pt_hi, y_edges)
-            ax.stairs(central, y_edges, baseline=None, color=color, linestyle=linestyle, lw=3)
+            # one horizontal line per y bin, without the vertical lines joining the bins
+            ax.hlines(central, y_edges[:-1], y_edges[1:], color=color, linestyle=linestyle, lw=3)
             for y_lo, y_hi, lo, hi in zip(y_edges[:-1], y_edges[1:], low, high):
                 ax.fill_between([y_lo, y_hi], lo, hi, color=color, alpha=0.25, linewidth=0)
             top = max(top, np.nanmax(high))
@@ -191,6 +199,7 @@ def draw(panels, filename, cms=None, frag_runs=None, sublabel=FLUX_LABEL):
 
     handles = [Line2D([0], [0], color=color, linestyle=linestyle, lw=3, label=label)
                for frag, (label, color, linestyle) in FRAGS.items() if frag in frag_runs]
+    handles.append(BAND_HANDLE)
     if has_cms:
         handles.append(Line2D([0], [0], color="black", marker="o", linestyle="none", markersize=9, label="CMS"))
     finish(fig, axes, handles, filename)

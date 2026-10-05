@@ -21,7 +21,7 @@ from cross_section import (read_rapidity, read_data_file, group_by_pt, integrate
                            load_results, GEVSQR_TO_MB)
 from cms_comparison import load_cms_data   # also moves to the repo root and sets the plot style
 from matplotlib.lines import Line2D
-from PbPb_bins import bin_averages, FRAGS, FIG9_PANELS, style_panel, draw_cms, finish
+from PbPb_bins import bin_averages, FRAGS, FIG9_PANELS, BAND_HANDLE, style_panel, draw_cms, finish
 
 INCLUSIVE = "output/An0n"
 DIFFRACTIVE = "input/diffractive/0n0n"
@@ -104,7 +104,8 @@ def draw(frag, filename, cms):
     for ax, (pt_lo, pt_hi, y_edges, show_cms) in zip(axes.flat, FIG9_PANELS):
         incl, diff, sub = bands(frag, pt_lo, pt_hi, y_edges)
         for (central, low, high), (_, color, linestyle) in zip((incl, sub), CURVES):
-            ax.stairs(central, y_edges, baseline=None, color=color, linestyle=linestyle, lw=3)
+            # one horizontal line per y bin, without the vertical lines joining the bins
+            ax.hlines(central, y_edges[:-1], y_edges[1:], color=color, linestyle=linestyle, lw=3)
             for y_lo, y_hi, lo, hi in zip(y_edges[:-1], y_edges[1:], low, high):
                 ax.fill_between([y_lo, y_hi], lo, hi, color=color, alpha=0.25, linewidth=0)
         top = np.nanmax(incl[2])
@@ -113,11 +114,12 @@ def draw(frag, filename, cms):
         if show_cms and (pt_lo, pt_hi) in cms:
             top = max(top, draw_cms(ax, cms[(pt_lo, pt_hi)]))
         first = ax is axes.flat[0]
-        style_panel(ax, pt_lo, pt_hi, -2.0, 2.0, top, legend_entries=4 if first else 0,
+        style_panel(ax, pt_lo, pt_hi, -2.0, 2.0, top, legend_entries=5 if first else 0,
                     sublabel=label if first else None)
 
     handles = [Line2D([0], [0], color=color, linestyle=linestyle, lw=3, label=name)
                for name, color, linestyle in CURVES]
+    handles.append(BAND_HANDLE)
     handles.append(Line2D([0], [0], color="black", marker="o", linestyle="none", markersize=9, label="CMS"))
     finish(fig, axes, handles, filename, legend_title="Inclusive", labelspacing=0.4)
 
