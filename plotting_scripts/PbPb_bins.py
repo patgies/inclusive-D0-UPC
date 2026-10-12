@@ -28,12 +28,14 @@ CHANNEL = os.environ.get("CHANNEL", "An0n")
 FLUX = os.environ.get("FLUX", "")
 OUTPUT = f"output/{CHANNEL}_{FLUX}" if FLUX else f"output/{CHANNEL}"
 SUFFIX = f"_{FLUX}" if FLUX else ""
-FLUX_LABEL = f"{FLUX} flux" if FLUX else None
+FLUX_NAME = {"Starlight": "STARlight"}.get(FLUX, FLUX)   # name shown in the figures
+# under the pT label of the first panel: the channel, and the flux if it is not the default one
+PANEL_LABEL = f"{CHANNEL}, {FLUX_NAME} flux" if FLUX else CHANNEL
 
 # fragmentation function: (label, color, line style)
 FRAGS = {
     "BCFY": ("BCFY", "#2166ac", "-"),
-    "KniehlKramer": ("Kniehl-Kramer", "#1b7837", "--"),
+    "KniehlKramer": ("KK", "#1b7837", "--"),
     "HymnD": ("HymnD", "#b2182b", ":"),
 }
 SCALE_FACTORS = ["0.5", "2.0"]
@@ -110,8 +112,8 @@ def style_panel(ax, pt_lo, pt_hi, y_min, y_max, top, legend_entries=0, sublabel=
     # Axes, ticks and pT label of one panel (style of diffractive-D0-UPC).
     ax.set_xlim(y_min, y_max)
     # more room above the data in the panel with the legend
-    # the legend takes about 0.12 of the panel height per row, from 0.91 down
-    automatic = (1.05 / (0.89 - 0.12 * legend_entries) if legend_entries else 1.25) * top
+    # the legend takes about 0.12 of the panel height per row, from 0.93 down
+    automatic = (1.05 / (0.91 - 0.12 * legend_entries) if legend_entries else 1.25) * top
     ax.set_ylim(0, Y_AXIS_MAX.get((pt_lo, pt_hi), automatic))
     ax.xaxis.set_major_locator(MultipleLocator(1))
     ax.tick_params(labelsize=30, pad=10)
@@ -125,11 +127,11 @@ def style_panel(ax, pt_lo, pt_hi, y_min, y_max, top, legend_entries=0, sublabel=
     ax.yaxis.get_offset_text().set_color("black")
     ax.yaxis.OFFSETTEXTPAD = 10
     ax.yaxis.set_major_formatter(formatter)
-    ax.text(0.94, 0.91, rf"$p_{{D^0\perp}} \in ({pt_lo:g}, {pt_hi:g})$ GeV", transform=ax.transAxes,
+    ax.text(0.94, 0.94, rf"$p_{{D\perp}} \in ({pt_lo:g}, {pt_hi:g})$ GeV", transform=ax.transAxes,
             ha="right", va="top", fontsize=28, bbox=dict(facecolor="white", edgecolor="none", pad=3),
             zorder=10)
     if sublabel:
-        ax.text(0.94, 0.78, sublabel, transform=ax.transAxes, ha="right", va="top", fontsize=28,
+        ax.text(0.94, 0.81, sublabel, transform=ax.transAxes, ha="right", va="top", fontsize=28,
                 linespacing=1.5, bbox=dict(facecolor="white", edgecolor="none", pad=3), zorder=10)
 
 
@@ -148,22 +150,23 @@ def draw_cms(ax, rows):
 def finish(fig, axes, handles, filename, legend_title=None, labelspacing=0.55):
     # Legend in the first panel, axis titles, and save.
     # legend in a white box, a little below the top; the pT and FF labels are drawn on top of the box
-    legend = axes.flat[0].legend(handles=handles, loc="upper left", bbox_to_anchor=(0.04, 0.91), fontsize=26,
+    legend = axes.flat[0].legend(handles=handles, loc="upper left", bbox_to_anchor=(0.04, 0.93), fontsize=26,
                                  frameon=True, facecolor="white", edgecolor="none", framealpha=1.0,
-                                 title=legend_title, title_fontsize=26, alignment="left",
+                                 title=legend_title, title_fontsize=26,
                                  labelspacing=labelspacing, borderpad=0.15, borderaxespad=0.25, handlelength=1.3,
                                  handletextpad=0.4)
+    legend._legend_box.align = "left"   # title on the left (alignment="left" needs matplotlib >= 3.6)
     legend.set_zorder(5)
     for ax in axes[-1]:
         ax.set_xlabel(r"$y$", labelpad=12, fontsize=34)
-    fig.supylabel(r"$d\sigma/dy\,dp_{D^0\perp}$ [mb/GeV]", fontsize=34, x=0.024)
-    fig.tight_layout(h_pad=1.5, w_pad=3.0, rect=(0.035, 0, 1, 1))
+    fig.supylabel(r"$d\sigma/dy\,dp_{D\perp}$ [mb/GeV]", fontsize=34, x=0.024)
+    fig.tight_layout(h_pad=0.3, w_pad=3.0, rect=(0.035, 0, 1, 1))
     os.makedirs("plots", exist_ok=True)
     fig.savefig(filename, bbox_inches="tight")
     print(f"Saved: {filename}")
 
 
-def draw(panels, filename, cms=None, frag_runs=None, sublabel=FLUX_LABEL):
+def draw(panels, filename, cms=None, frag_runs=None, sublabel=PANEL_LABEL):
     # frag_runs: {frag: [central results, scale variations...]}. Default: the Pb+Pb results.
     if frag_runs is None:
         frag_runs = {}

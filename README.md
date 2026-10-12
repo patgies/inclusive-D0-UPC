@@ -54,7 +54,15 @@ FRAG_TYPE=BCFY ./run_scripts/run_scale_variation.sh        # fragmentation scale
 TARGET=pA FRAG_TYPE=BCFY ./run_scripts/run_proton.sh       # p+Pb
 ```
 
-The results go to `output/`. The plots are made with `plotting_scripts/PbPb_bins.py` (Pb+Pb, with the CMS data) and `plotting_scripts/pPb_bins.py` (p+Pb).
+The results go to `output/`. The plots go to `plots/` and are made with
+
+```bash
+python3 plotting_scripts/PbPb_bins.py              # Pb+Pb in bins of pT and y, with the CMS data
+python3 plotting_scripts/PbPb_bins_subtracted.py   # Pb+Pb, inclusive (An0n) minus diffractive (0n0n)
+python3 plotting_scripts/pPb_bins.py               # p+Pb
+```
+
+`FLUX=Starlight` in front of the two Pb+Pb scripts plots the runs with the STARlight flux table (`output/An0n_Starlight/`).
 
 ---
 
@@ -67,7 +75,7 @@ The code expects dipole input files of the form
 
 Dipole parametrization MVe from [https://github.com/hejajama/rcbkdipole](https://github.com/hejajama/rcbkdipole).
 
-The other inputs are in `input/`: the fragmentation function grids, the photon flux tables, the BK posterior samples and the CMS data.
+The other inputs are in `input/`: the fragmentation function grids, the photon flux tables, the BK posterior samples, the CMS data, and the diffractive cross sections of [diffractive-D0-UPC](https://github.com/patgies/diffractive-D0-UPC) (`input/diffractive/`) that `PbPb_bins_subtracted.py` subtracts.
 
 ---
 
@@ -95,6 +103,8 @@ The fragmentation function is selected through `FRAG_TYPE`, at the scale `Q = SC
 - `HymnD`: Epele, Hekhorn, Helenius, Paukkunen, and Zurita, arXiv:2609.10327.
 
 `BCFY` and `KniehlKramer` are DGLAP-evolved with [eko](https://github.com/NNPDF/eko) in the repository [EKO-FF](https://github.com/patgies/EKO-FF).
+
+The two parts of `BCFY` (direct D0 and D*0 → D0) are each normalized to one before they are multiplied by their weights, 0.168 and 0.39, as in Cacciari and Nason, JHEP 09 (2003) 006, so that the integral of `D(z_h)` over `z_h` is 0.558 at the initial scale.
 
 The details, and how to use another flux or fragmentation function, are in [notes_photon_flux.pdf](notes_photon_flux.pdf) and [notes_FF.pdf](notes_FF.pdf).
 

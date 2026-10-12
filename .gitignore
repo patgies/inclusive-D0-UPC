@@ -19,3 +19,4 @@ run_scripts/**/*.log
 run_scripts/**/*.err
 
 notes/
+.vscode/
