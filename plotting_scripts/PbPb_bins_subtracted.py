@@ -147,7 +147,7 @@ def bands(frag, pt_lo, pt_hi, y_edges):
 # (label, color, line style) of the two curves
 CURVES = [
     ("An0n", "#2166ac", "-"),    # inclusive
-    ("An0n $-$ 0n0n (diff)", "#b2182b", "--"),   # An0n inclusive minus 0n0n diffractive
+    ("Xn0n", "#b2182b", "--"),   # An0n inclusive minus 0n0n diffractive
 ]
 
 
@@ -182,7 +182,10 @@ def draw(frag, filename, cms):
 
 def main():
     cms = load_cms_data()
-    for frag in FRAGS:
+    only = os.environ.get("FRAG_TYPE", "")
+    if only and only not in FRAGS:
+        sys.exit(f"Unknown FRAG_TYPE '{only}'. Expected one of: {', '.join(FRAGS)}.")
+    for frag in ([only] if only else FRAGS):
         if not glob.glob(f"{DIFFRACTIVE}/central_values/{frag}/*.dat"):
             continue
         draw(frag, f"plots/D0_incl_corrected_{frag}{SUFFIX}.pdf", cms)

@@ -112,8 +112,8 @@ def style_panel(ax, pt_lo, pt_hi, y_min, y_max, top, legend_entries=0, sublabel=
     # Axes, ticks and pT label of one panel (style of diffractive-D0-UPC).
     ax.set_xlim(y_min, y_max)
     # more room above the data in the panel with the legend
-    # the legend takes about 0.12 of the panel height per row, from 0.93 down
-    automatic = (1.05 / (0.91 - 0.12 * legend_entries) if legend_entries else 1.25) * top
+    # the legend takes about 0.13 of the panel height per row, from 0.93 down
+    automatic = (1.05 / (0.91 - 0.13 * legend_entries) if legend_entries else 1.5 if sublabel else 1.25) * top
     ax.set_ylim(0, Y_AXIS_MAX.get((pt_lo, pt_hi), automatic))
     ax.xaxis.set_major_locator(MultipleLocator(1))
     ax.tick_params(labelsize=30, pad=10)
@@ -128,10 +128,10 @@ def style_panel(ax, pt_lo, pt_hi, y_min, y_max, top, legend_entries=0, sublabel=
     ax.yaxis.OFFSETTEXTPAD = 10
     ax.yaxis.set_major_formatter(formatter)
     ax.text(0.94, 0.94, rf"$p_{{D\perp}} \in ({pt_lo:g}, {pt_hi:g})$ GeV", transform=ax.transAxes,
-            ha="right", va="top", fontsize=28, bbox=dict(facecolor="white", edgecolor="none", pad=3),
+            ha="right", va="top", fontsize=30, bbox=dict(facecolor="white", edgecolor="none", pad=3),
             zorder=10)
     if sublabel:
-        ax.text(0.94, 0.81, sublabel, transform=ax.transAxes, ha="right", va="top", fontsize=28,
+        ax.text(0.94, 0.81, sublabel, transform=ax.transAxes, ha="right", va="top", fontsize=30,
                 linespacing=1.5, bbox=dict(facecolor="white", edgecolor="none", pad=3), zorder=10)
 
 
@@ -150,9 +150,9 @@ def draw_cms(ax, rows):
 def finish(fig, axes, handles, filename, legend_title=None, labelspacing=0.55):
     # Legend in the first panel, axis titles, and save.
     # legend in a white box, a little below the top; the pT and FF labels are drawn on top of the box
-    legend = axes.flat[0].legend(handles=handles, loc="upper left", bbox_to_anchor=(0.04, 0.93), fontsize=26,
+    legend = axes.flat[0].legend(handles=handles, loc="upper left", bbox_to_anchor=(0.04, 0.93), fontsize=28,
                                  frameon=True, facecolor="white", edgecolor="none", framealpha=1.0,
-                                 title=legend_title, title_fontsize=26,
+                                 title=legend_title, title_fontsize=28,
                                  labelspacing=labelspacing, borderpad=0.15, borderaxespad=0.25, handlelength=1.3,
                                  handletextpad=0.4)
     legend._legend_box.align = "left"   # title on the left (alignment="left" needs matplotlib >= 3.6)
@@ -166,7 +166,7 @@ def finish(fig, axes, handles, filename, legend_title=None, labelspacing=0.55):
     print(f"Saved: {filename}")
 
 
-def draw(panels, filename, cms=None, frag_runs=None, sublabel=PANEL_LABEL):
+def draw(panels, filename, cms=None, frag_runs=None, sublabel=PANEL_LABEL, second_panel_text="Inclusive Pb-Pb"):
     # frag_runs: {frag: [central results, scale variations...]}. Default: the Pb+Pb results.
     if frag_runs is None:
         frag_runs = {}
@@ -197,8 +197,9 @@ def draw(panels, filename, cms=None, frag_runs=None, sublabel=PANEL_LABEL):
         if show_cms and cms is not None and (pt_lo, pt_hi) in cms:
             top = max(top, draw_cms(ax, cms[(pt_lo, pt_hi)]))
         first = ax is axes.flat[0]
+        second = ax is axes.flat[1]
         style_panel(ax, pt_lo, pt_hi, y_min, y_max, top, legend_entries=n_legend if first else 0,
-                    sublabel=sublabel if first else None)
+                    sublabel=sublabel if first else second_panel_text if second else None)
 
     handles = [Line2D([0], [0], color=color, linestyle=linestyle, lw=3, label=label)
                for frag, (label, color, linestyle) in FRAGS.items() if frag in frag_runs]

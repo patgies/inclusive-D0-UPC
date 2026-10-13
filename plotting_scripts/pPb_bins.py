@@ -50,7 +50,8 @@ def main():
     frag_runs = {frag: runs for frag in FRAGS for runs in [load_frag(frag)] if runs is not None}
     if not frag_runs:
         sys.exit(f"No results in {OUTPUT}/central_values/ -- run TARGET=pA run_scripts/run_proton.sh first.")
-    draw(NARROW_PANELS, "plots/D0_incl_bins_pPb.pdf", frag_runs=frag_runs, sublabel="p+Pb")
+    draw(NARROW_PANELS, "plots/D0_incl_bins_pPb.pdf", frag_runs=frag_runs, sublabel=None,
+         second_panel_text="Inclusive p-Pb")
 
 
 if __name__ == "__main__":
