@@ -40,7 +40,7 @@ FRAGS = {
 }
 SCALE_FACTORS = ["0.5", "2.0"]
 # legend entry of the scale-variation bands (as in diffractive-D0-UPC)
-BAND_HANDLE = Patch(facecolor="0.3", alpha=0.25, edgecolor="none", label=r"$\mu_F \in [0.5, 2]\, m_t$")
+BAND_HANDLE = Patch(facecolor="0.3", alpha=0.25, edgecolor="none", label=r"$\mu_F \in [0.5, 2]\, m_T$")
 
 # Panels (pT bin, y bin edges, draw the CMS data) of the two figures.
 # Fig. 9 of arXiv:2606.05469: the CMS bins. CMS has one y bin for 2 < pT < 5 GeV.

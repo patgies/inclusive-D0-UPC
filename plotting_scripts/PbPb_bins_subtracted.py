@@ -175,7 +175,7 @@ def draw(frag, filename, cms):
     handles = [Line2D([0], [0], color=color, linestyle=linestyle, lw=3, label=name)
                for name, color, linestyle in CURVES]
     # the band of the difference also has the mu_R variation of the diffractive part (alpha_s)
-    handles.append(Patch(facecolor="0.3", alpha=0.25, edgecolor="none", label=r"$\mu_F, \mu_R \in [0.5, 2]\, m_t$"))
+    handles.append(Patch(facecolor="0.3", alpha=0.25, edgecolor="none", label=r"$\mu_F, \mu_R \in [0.5, 2]\, m_T$"))
     handles.append(Line2D([0], [0], color="black", marker="o", linestyle="none", markersize=9, label="CMS"))
     finish(fig, axes, handles, filename, labelspacing=0.5)
 
