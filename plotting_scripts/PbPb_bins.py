@@ -20,7 +20,7 @@ from matplotlib.patches import Patch
 from matplotlib.ticker import MultipleLocator, ScalarFormatter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cross_section import load_results
+from cross_section import load_results, add_edge, proton_dir
 from cms_comparison import load_cms_data   # also moves to the repo root and sets the plot style
 
 CHANNEL = os.environ.get("CHANNEL", "An0n")
@@ -85,13 +85,16 @@ def bin_averages(results, pt_lo, pt_hi, y_edges):
 def load_frag(frag):
     # results of the central scale and of the scale variation, for one fragmentation function
     name = f"D0_incl_{frag}_{CHANNEL}_Pb*_y*.dat"   # "_Pb_TABLE_y" for a table flux
-    runs = [load_results(f"{OUTPUT}/central_values/{frag}/{name}")]
-    if not runs[0]:
-        return None
-    for factor in SCALE_FACTORS:
-        varied = load_results(f"{OUTPUT}/scale_variation/{frag}/factor_{factor}/{name}")
-        if varied:
-            runs.append(varied)
+    proton_name = f"D0_proton_baseline_incl_{frag}_{CHANNEL}*_y*.dat"
+    runs = []
+    for factor in ["1.0"] + SCALE_FACTORS:
+        folder = f"{OUTPUT}/central_values/{frag}" if factor == "1.0" else f"{OUTPUT}/scale_variation/{frag}/factor_{factor}"
+        results = load_results(f"{folder}/{name}")
+        if not results:
+            if factor == "1.0":
+                return None
+            continue
+        runs.append(add_edge(results, f"{folder}/{name}", f"{proton_dir(OUTPUT, frag, factor)}/{proton_name}"))
     return runs
 
 

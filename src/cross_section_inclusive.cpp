@@ -48,8 +48,21 @@ double integrand_inclusive(double* vec, size_t /*dim*/, void* p)
     double flux_z  = flux_is_integrated(p) ? integrated_photon_flux(z_gamma) : photon_flux(b, z_gamma, p);
     double flux    = flux_z * z_gamma / qp;
 
-    if (!par->Sk_interp) return 0.0;
-    double Sk = par->Sk_interp->Evaluate(l);
+    // dipole at the x of the charm quark, interpolated in ln x between the grid points
+    if (par->Sk_grid.empty()) return 0.0;
+    double Sk;
+    const std::vector<double>& lx = par->x_grid_log;
+    double lx_c = log(mt / par->ss * exp(-par->y));   // above the grid: the last point (x just below 0.01)
+    if (lx.size() == 1 || lx_c <= lx.front()) {
+        Sk = par->Sk_grid.front()->Evaluate(l);
+    } else if (lx_c >= lx.back()) {
+        Sk = par->Sk_grid.back()->Evaluate(l);
+    } else {
+        size_t i = 1;
+        while (lx[i] < lx_c) i++;
+        double t = (lx_c - lx[i-1]) / (lx[i] - lx[i-1]);
+        Sk = (1.0 - t) * par->Sk_grid[i-1]->Evaluate(l) + t * par->Sk_grid[i]->Evaluate(l);
+    }
     if (Sk < 0.0) Sk = 0.0;
 
     double fhard = F_hard(par->m, pp, pc, l, phi, qp);

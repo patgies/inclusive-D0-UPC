@@ -23,13 +23,16 @@
 # VEGAS calls per point
 : "${CALLS:=2e5}"
 
+# x of the dipole: charm (x of the charm quark, default) | fixed (x at z_h = 1, faster, for tests)
+: "${X_MODE:=charm}"
+
 # Folder for all results
 : "${OUTPUT_ROOT:=output}"
 
 # Parallel processes
 : "${CORES:=$(( $(nproc) / 2 ))}"
 
-export OUTPUT_ROOT CHANNEL FLUX_MODEL TARGET FRAG_TYPE HYMND_FILE SCALE_FACTOR CALLS
+export OUTPUT_ROOT CHANNEL FLUX_MODEL TARGET FRAG_TYPE HYMND_FILE SCALE_FACTOR CALLS X_MODE
 [[ -n "${FLUX_FILE:-}" ]] && export FLUX_FILE
 
 # Tags used in folder and file names

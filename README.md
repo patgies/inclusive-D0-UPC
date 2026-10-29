@@ -51,6 +51,7 @@ The run scripts loop over `p_D0`, `y` and the dipole files. Their settings are e
 ```bash
 CHANNEL=An0n FRAG_TYPE=BCFY ./run_scripts/run_nucleus.sh   # Pb+Pb
 FRAG_TYPE=BCFY ./run_scripts/run_scale_variation.sh        # fragmentation scale 0.5, 1, 2 x mT
+TARGET=AA FRAG_TYPE=BCFY ./run_scripts/run_proton.sh       # proton with the Pb+Pb flux (edge, R_pA)
 TARGET=pA FRAG_TYPE=BCFY ./run_scripts/run_proton.sh       # p+Pb
 ```
 
@@ -60,6 +61,7 @@ The results go to `output/`. The plots go to `plots/` and are made with
 python3 plotting_scripts/PbPb_bins.py              # Pb+Pb in bins of pT and y, with the CMS data
 python3 plotting_scripts/PbPb_bins_subtracted.py   # Pb+Pb, inclusive (An0n) minus diffractive (0n0n)
 python3 plotting_scripts/pPb_bins.py               # p+Pb
+python3 plotting_scripts/RpA.py                    # R_pA, Eq. (40) of arXiv:2503.16108
 ```
 
 `FLUX=Starlight` in front of the two Pb+Pb scripts plots the runs with the STARlight flux table (`output/An0n_Starlight/`).
@@ -96,6 +98,8 @@ The photon flux is selected through `FLUX_MODEL`:
 
 `TARGET=pA` computes p+Pb collisions at 8.16 TeV instead of Pb+Pb at 5.36 TeV.
 
+The dipole is evaluated at the `x` of the charm quark, `x = m_T e^{-y} / sqrt(s)` with `p_c = p_D0 / z_h`, as in arXiv:2503.16108 (`X_MODE=charm`, default). `X_MODE=fixed` uses the `x` of `z_h = 1` for the whole `z_h` integral; it is about 5 times faster and meant for quick tests.
+
 The fragmentation function is selected through `FRAG_TYPE`, at the scale `Q = SCALE_FACTOR * mT`:
 
 - `BCFY`: E. Braaten, K.-m. Cheung, S. Fleming, and T.-C. Yuan, Phys. Rev. D 51, 4819–4829 (1995).
@@ -121,6 +125,8 @@ The HymnD replicas and the BK initial-condition uncertainty (about 2% in the CMS
 The output of the nuclear runs is per dipole impact parameter `b_d`. The plotting scripts integrate over `b_d` (Simpson's rule, multiplied by `2πb_d`) and multiply by the prefactors.
 
 For a proton target, the impact-parameter integral is replaced by the proton normalization `16.36` mb of the MVe dipole parametrization.
+
+The Glauber files stop at `b_d = 32` GeV^-1, which leaves out the edge of the nucleus (about 20 nucleons). The plotting scripts add it as `A_edge` times the proton cross section with the same flux, fragmentation function and scale, as in arXiv:2503.16108. This needs the proton reference from `TARGET=AA ./run_scripts/run_proton.sh` in `output/<CHANNEL>/proton_baseline/`; `EDGE=0` leaves the edge out.
 
 Units are GeV throughout.
 

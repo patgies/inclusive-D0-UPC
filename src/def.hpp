@@ -2,6 +2,7 @@
 #define def_hpp
 #include <memory>
 #include <string>
+#include <vector>
 #include "amplitudelib.hpp"
 #include "interpolation.hpp"
 
@@ -35,14 +36,16 @@ struct parameters
     double bmin, bmax, qpmax, lmax;
     size_t calls;
 
-    // Dipole in momentum space, S(l)
-    std::unique_ptr<Interpolator> Sk_interp;
+    // Dipole in momentum space, S(l), on a grid in ln x (x_grid_log). The integrand
+    // interpolates in ln x at the x of the charm quark, x = mT(pc) e^{-y} / sqrt(s).
+    std::vector<std::unique_ptr<Interpolator>> Sk_grid;
+    std::vector<double> x_grid_log;
 
     // Fragmentation function D(z_h) at the fragmentation scale
     std::unique_ptr<Interpolator> D_frag_interp;
 };
 
-// dsigma/(dy d2pD0) without prefactors. Needs par->Sk_interp and par->D_frag_interp.
+// dsigma/(dy d2pD0) without prefactors. Needs par->Sk_grid and par->D_frag_interp.
 double D0CrossSection_inclusive(void* p);
 
 #endif

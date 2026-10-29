@@ -60,6 +60,7 @@ for y in $Y_VALS; do
 		echo "# flux_model     : ${FLUX_MODEL}"
 		echo "# scale_factor   : ${SCALE_FACTOR} (fragmentation scale Q = SCALE_FACTOR * m_T)"
 		echo "# calls          : ${CALLS} (VEGAS calls per point)"
+		echo "# dipole x       : ${X_MODE}"
 		echo "# dipole file    : ${DIPOLE_FILE}"
 		echo "# fixed rapidity y : ${y}"
 		echo "# pD0  dsigma_dydpt"

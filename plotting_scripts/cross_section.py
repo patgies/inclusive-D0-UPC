@@ -21,7 +21,14 @@ GEVSQR_TO_MB = GEVSQR_TO_NB * 1e-6
 factor_A = alpha_em * e_charm_squared * Nc / (2 * pi) ** 4
 
 A = 208
-ATA = 30.756  # dimensionless
+SIGMA0_HALF = 16.36   # mb, proton normalization of the MVe dipole. It replaces the b_d integral.
+
+# The Glauber dipole files stop at b_d = 32 GeV^-1, which leaves out the edge of the nucleus
+# (about 20 nucleons). As in arXiv:2503.16108, the edge is dilute and is added as
+# A_edge * (proton cross section with the same flux). EDGE=0 leaves it out.
+EDGE = os.environ.get("EDGE", "1") != "0"
+R_WS, A_WS = 6.49, 0.54   # Woods-Saxon radius and diffuseness [fm]
+HBARC = 0.197327
 
 
 def read_rapidity(filename):
@@ -109,6 +116,56 @@ def load_results(pattern):
             results[y].append((pt, cross_section))
 
     return results
+
+
+def load_proton_results(pattern):
+    # Reads the files "pD0  dsigma" of run_proton.sh. Returns {y: [(pT, cross section), ...]} in mb/GeV.
+    results = {}
+    for filename in sorted(glob.glob(pattern)):
+        points = []
+        with open(filename) as f:
+            for line in f:
+                if line.startswith("#") or not line.strip():
+                    continue
+                pt, raw = (float(x) for x in line.split())
+                points.append((pt, raw * factor_A * SIGMA0_HALF * (2 * pi) * pt))
+        results[read_rapidity(filename)] = points
+    return results
+
+
+def nucleons_beyond(b_max):
+    # Number of nucleons of the Woods-Saxon nucleus at transverse distance > b_max [GeV^-1]
+    import numpy as np
+    s = np.linspace(0.0, 25.0, 2501)
+    z = np.linspace(-40.0, 40.0, 4001)
+    TA = np.array([np.trapezoid(1.0 / (1.0 + np.exp((np.sqrt(z**2 + x**2) - R_WS) / A_WS)), z) for x in s])
+    weight = 2 * pi * s * TA
+    inside = s <= b_max * HBARC
+    return A * (1.0 - np.trapezoid(weight[inside], s[inside]) / np.trapezoid(weight, s))
+
+
+def add_edge(nucleus, nucleus_pattern, proton_pattern):
+    # nucleus + A_edge * proton, point by point. Stops if a proton point is missing.
+    if not EDGE or not nucleus:
+        return nucleus
+    b_max = max(float(line.split()[0]) for f in glob.glob(nucleus_pattern)
+                for line in open(f) if line.strip() and line[0] != "#")
+    a_edge = nucleons_beyond(b_max)
+    proton = load_proton_results(proton_pattern)
+    out = {}
+    for y, points in nucleus.items():
+        p = dict(proton.get(y, []))
+        missing = [pt for pt, _ in points if pt not in p]
+        if missing:
+            raise SystemExit(f"Edge of the nucleus: no proton result for y = {y:g}, pT = {missing[0]:g} in "
+                             f"{proton_pattern} -- run run_scripts/run_proton.sh (TARGET=AA), or EDGE=0.")
+        out[y] = [(pt, value + a_edge * p[pt]) for pt, value in points]
+    return out
+
+
+def proton_dir(base, frag, scale="1.0"):
+    # proton reference of output/<CHANNEL>/central_values/<frag>/ (scale 1) or of scale_variation/
+    return f"{base}/proton_baseline/{frag}" if scale == "1.0" else f"{base}/proton_baseline/factor_{scale}/{frag}"
 
 
 def load_hymnd_band(member_dir_pattern):

@@ -11,27 +11,14 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cross_section import read_rapidity, factor_A, pi
+from cross_section import load_proton_results
 import cms_comparison   # moves to the repo root and sets the plot style
 from PbPb_bins import draw, FRAGS, SCALE_FACTORS, NARROW_PANELS
 
 OUTPUT = "output/pPb"
-sigma0 = 16.36   # mb, proton normalization of the MVe dipole. It replaces the b_d integral.
 
 
-def load_pPb(pattern):
-    # Reads the files "pD0  dsigma" of run_proton.sh. Returns {y: [(pT, cross section), ...]} in mb/GeV.
-    results = {}
-    for filename in sorted(glob.glob(pattern)):
-        points = []
-        with open(filename) as f:
-            for line in f:
-                if line.startswith("#") or not line.strip():
-                    continue
-                pt, raw = (float(x) for x in line.split())
-                points.append((pt, raw * factor_A * sigma0 * (2 * pi) * pt))
-        results[read_rapidity(filename)] = points
-    return results
+load_pPb = load_proton_results   # proton normalization sigma0/2 = 16.36 mb
 
 
 def load_frag(frag):

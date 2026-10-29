@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cross_section import (read_rapidity, read_data_file, group_by_pt, integrate_over_b,
-                           load_results, GEVSQR_TO_MB)
+                           load_results, add_edge, proton_dir, GEVSQR_TO_MB)
 from cms_comparison import load_cms_data   # also moves to the repo root and sets the plot style
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
@@ -129,7 +129,10 @@ def load_diffractive(frag, mu_f, mu_r):
 
 
 def load_inclusive(frag, mu_f):
-    return load_results(f"{scale_dir(INCLUSIVE, None, frag, mu_f)}/D0_incl_{frag}_An0n_Pb*_y*.dat")   # "_Pb_TABLE_y" for a table flux
+    # inclusive An0n, with the edge of the nucleus added (see cross_section.add_edge)
+    pattern = f"{scale_dir(INCLUSIVE, None, frag, mu_f)}/D0_incl_{frag}_An0n_Pb*_y*.dat"   # "_Pb_TABLE_y" for a table flux
+    proton = f"{proton_dir(INCLUSIVE, frag, str(mu_f))}/D0_proton_baseline_incl_{frag}_An0n*_y*.dat"
+    return add_edge(load_results(pattern), pattern, proton)
 
 
 def bands(frag, pt_lo, pt_hi, y_edges):

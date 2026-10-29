@@ -145,15 +145,36 @@ int main(int argc, char* argv[])
     cout << "# target        : " << param.target << " (sqrt(s_NN) = " << param.ss << " GeV)" << endl;
     cout << "# channel       : " << param.channel << endl;
     cout << "# flux          : " << photon_flux_info() << endl;
+    // X_MODE = charm (default) | fixed, see below
+    string x_mode = getenv("X_MODE") ? getenv("X_MODE") : "charm";
+    if (x_mode != "charm" && x_mode != "fixed") {
+        cerr << "Error: unknown X_MODE '" << x_mode << "'. Expected charm or fixed." << endl;
+        return 1;
+    }
+    cout << "# dipole x      : " << (x_mode == "charm" ? "charm (x of the charm quark, pc = pD0/z_h)"
+                                                       : "fixed (x at z_h = 1)") << endl;
     cout << "# y  dsigma_dyd^2pD0" << endl;
 
     param.y = y;
 
+    // x of the dipole. X_MODE=charm (default): x = mT e^{-y} / sqrt(s) with mT of the charm quark,
+    // pc = pD0 / z_h (capped at 0.01), as in arXiv:2503.16108. S(l) is computed on a grid in ln x
+    // from z_h = 1 to z_h = z_h_min and the integrand interpolates in ln x.
+    // X_MODE=fixed: x at z_h = 1 for every z_h (about 5 times faster, for quick tests).
     double xbj = (mt0 / param.ss) * exp(-y);
     if (xbj > 0.01) xbj = 0.01;
     param.xbj  = xbj;
+    bool x_fixed = (x_mode == "fixed");
+    double pc_max = pD0 / param.z_h_min;
+    double x_max  = std::min(0.01 * (1.0 - 1e-9), sqrt(pc_max * pc_max + param.m2) / param.ss * exp(-y));   // below x0 = 0.01
+    int nx = (x_fixed || x_max <= xbj * 1.0001) ? 1 : (getenv("X_GRID_N") ? atoi(getenv("X_GRID_N")) : 8);
+    for (int i = 0; i < nx; i++) {
+        double lx = (nx == 1) ? log(xbj) : log(xbj) + (log(x_max) - log(xbj)) * i / (nx - 1.0);
+        param.x_grid_log.push_back(lx);
+        double x = (i == 0) ? xbj : std::min(exp(lx), x_max);   // exp(log(x)) can come out above x0 = 0.01
+        param.Sk_grid.push_back(inst.MakeSkInterpolator(x, param.lmax));
+    }
 
-    param.Sk_interp = inst.MakeSkInterpolator(xbj, param.lmax);
 
     double res = D0CrossSection_inclusive(static_cast<void*>(&param));
     cout << y << "  " << res << endl;
