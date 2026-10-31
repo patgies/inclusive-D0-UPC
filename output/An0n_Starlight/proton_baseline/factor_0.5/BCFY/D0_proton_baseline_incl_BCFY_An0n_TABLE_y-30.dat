@@ -1,23 +1,24 @@
 # proton target with the Pb+Pb photon flux (TARGET=AA), An0n channel
 # proton target, BCFY fragmentation
-# generated      : 2026-10-29 21:12:13 EET
+# generated      : 2026-10-31 04:26:01 EET
 # flux_model     : TABLE
 # scale_factor   : 0.5 (fragmentation scale Q = SCALE_FACTOR * m_T)
 # calls          : 2e5 (VEGAS calls per point)
+# dipole x       : charm
 # dipole file    : data/proton/mve.dat
 # fixed rapidity y : -3.0
 # pD0  dsigma_dydpt
-0.1  494.336
-0.3  383.965
-0.5  298.647
-0.7  226.23
-0.9  167.109
-1.1  120.797
-1.3  85.8804
-1.5  60.5515
-1.7  42.5559
-1.9  30.0123
-2.1  21.3024
+0.1  491.552
+0.3  379.554
+0.5  293.751
+0.7  221.363
+0.9  162.683
+1.1  116.793
+1.3  82.5712
+1.5  57.9564
+1.7  40.7307
+1.9  28.9532
+2.1  21.0042
 2.3  15.4928
 2.5  11.5767
 2.7  8.71736

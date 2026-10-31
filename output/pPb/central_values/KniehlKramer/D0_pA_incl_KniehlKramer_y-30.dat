@@ -1,31 +1,32 @@
 # p+Pb (TARGET=pA): lead emits, proton target, 8.16 TeV, Gamma_pA [sigma_NN=99 mb], no EMD
 # proton target, KniehlKramer fragmentation
-# generated      : 2026-10-04 20:06:08 EEST
+# generated      : 2026-10-31 04:30:22 EET
 # flux_model     : WS
 # scale_factor   : 1.0 (fragmentation scale Q = SCALE_FACTOR * m_T)
 # calls          : 2e5 (VEGAS calls per point)
+# dipole x       : charm
 # dipole file    : data/proton/mve.dat
 # fixed rapidity y : -3.0
 # pD0  dsigma_dydpt
-0.1  1748.51
-0.3  1132
-0.5  761.893
-0.7  510.266
-0.9  339.658
-1.1  224.582
-1.3  148.646
-1.5  98.9039
-1.7  66.4867
-1.9  45.321
-2.1  31.3384
-2.3  22.0019
-2.5  15.7265
-2.7  11.3933
-2.9  8.37873
-3.1  6.23711
-3.3  4.7144
-3.5  3.59998
-3.7  2.78027
+0.1  1731.55
+0.3  1104.83
+0.5  732.656
+0.7  485.649
+0.9  318.081
+1.1  207.556
+1.3  135.319
+1.5  88.8847
+1.7  59.0186
+1.9  39.7625
+2.1  27.3103
+2.3  19.1189
+2.5  13.6699
+2.7  9.98352
+2.9  7.44572
+3.1  5.66587
+3.3  4.38835
+3.5  3.45617
+3.7  2.75235
 3.9  2.21825
 4.1  1.80521
 4.3  1.48319

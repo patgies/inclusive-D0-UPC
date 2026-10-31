@@ -1,33 +1,34 @@
 # proton target with the Pb+Pb photon flux (TARGET=AA), An0n channel
 # proton target, KniehlKramer fragmentation
-# generated      : 2026-10-29 21:12:14 EET
+# generated      : 2026-10-31 04:23:59 EET
 # flux_model     : EFF
 # scale_factor   : 2.0 (fragmentation scale Q = SCALE_FACTOR * m_T)
 # calls          : 2e5 (VEGAS calls per point)
+# dipole x       : charm
 # dipole file    : data/proton/mve.dat
 # fixed rapidity y : -2.5
 # pD0  dsigma_dydpt
-0.1  1846.35
-0.3  922.473
-0.5  556.38
-0.7  349.613
-0.9  222.412
-1.1  142.444
-1.3  92.0453
-1.5  60.2702
-1.7  40.0195
-1.9  26.967
-2.1  18.5028
-2.3  12.9102
-2.5  9.15169
-2.7  6.60215
-2.9  4.83448
-3.1  3.59096
-3.3  2.69875
-3.5  2.05325
-3.7  1.57945
-3.9  1.22958
-4.1  0.967674
+0.1  1810.09
+0.3  886.8
+0.5  528.787
+0.7  327.699
+0.9  205.607
+1.1  129.852
+1.3  82.6983
+1.5  53.3389
+1.7  34.9513
+1.9  23.3076
+2.1  15.8494
+2.3  10.9975
+2.5  7.79188
+2.7  5.63078
+2.9  4.1606
+3.1  3.13198
+3.3  2.40171
+3.5  1.87335
+3.7  1.48385
+3.9  1.18843
+4.1  0.962829
 4.3  0.786877
 4.5  0.649142
 4.7  0.539352
