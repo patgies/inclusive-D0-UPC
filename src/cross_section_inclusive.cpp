@@ -106,9 +106,9 @@ double D0CrossSection_inclusive(void* p)
     // Integration variables {z_h, u_qp, b, phi, l}.
     // EFF and TABLE are already integrated over b, so b is not used (range [0,1]).
     // PL and WS: b from 0 (small b is removed by Gamma_AA). It starts at bmin
-    // where there is a cut instead: p+Pb, PL(AnAn) and GAMMA_AA_ONE.
+    // where there is a cut instead: p+Pb and PL(AnAn).
     bool eff = flux_is_integrated(p);
-    bool cut = (par->target == "pA" || par->channel == "PL(AnAn)" || par->gamma_aa_one);
+    bool cut = (par->target == "pA" || par->channel == "PL(AnAn)");
     double b_lo = (eff || !cut) ? 0.0 : par->bmin;
     double b_hi = eff ? 1.0 : par->bmax;
     double low[] = {par->z_h_min, 0.0, b_lo, 0.0,  0.0 };

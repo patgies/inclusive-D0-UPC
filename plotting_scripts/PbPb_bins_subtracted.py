@@ -40,7 +40,7 @@ Nc = 3
 # Dilute edge of the nucleus: the lead dipole files stop at b = 32 GeV^-1, where A T_A(b) sigma0/2 ~ 1.
 # Beyond it the nuclear amplitude is A T_A(b) sigma0/2 times the proton one (arXiv:1309.6963), so that
 # sigma_A^edge = EDGE_FACTOR * sigma_p, with sigma_p the proton-target result with the same flux,
-# fragmentation function and scale (diffractive-D0-UPC output/proton_edge/, copied to
+# fragmentation function and scale (diffractive-D0-UPC output/proton_baseline/, copied to
 # input/diffractive/0n0n<SUFFIX>_proton_edge/). EDGE_FACTOR = (sigma0/2) int_{b>b_max} [A T_A]^2 d^2b,
 # as nuclear_edge_factor(32) in diffractive-D0-UPC/plotting_scripts/D0.py. NUCLEAR_EDGE=0 switches it off.
 NUCLEAR_EDGE = os.environ.get("NUCLEAR_EDGE", "1") == "1"

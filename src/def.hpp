@@ -29,7 +29,6 @@ struct parameters
     double alpha, Z, mn, S;   // alpha_em, charge, nucleon mass, EMD area
     std::string target = "AA";      // AA (Pb+Pb) | pA (p+Pb: Gamma_pA, no EMD factor)
     std::string channel;
-    bool gamma_aa_one = false;        // true: Gamma_AA(b) = 1
     std::string flux_model = "EFF";   // EFF | PL | WS | TABLE
 
     // VEGAS integration limits

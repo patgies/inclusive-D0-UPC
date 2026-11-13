@@ -39,5 +39,3 @@ export OUTPUT_ROOT CHANNEL FLUX_MODEL TARGET FRAG_TYPE HYMND_FILE SCALE_FACTOR C
 channel_tag=$(echo "$CHANNEL" | tr -d '() ')
 # "" for EFF, "_PL" etc. for the other fluxes
 flux_tag=$([[ "$FLUX_MODEL" == "EFF" ]] && echo "" || echo "_${FLUX_MODEL}")
-# "_G1" if GAMMA_AA_ONE is set
-g1_tag=$([[ -n "${GAMMA_AA_ONE:-}" ]] && echo "_G1" || echo "")

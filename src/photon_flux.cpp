@@ -136,8 +136,6 @@ double photon_flux(double b, double z_gamma, void* p)
         } else {
             gamma = 0.0;
         }
-    } else if (par->gamma_aa_one) {
-        gamma = 1.0;
     } else {
         if (b < 150.0) {
             gamma = get_GammaAA(b);
@@ -412,7 +410,6 @@ void set_collision_parameters(void* p)
     par->mn      = 0.938;
     par->S       = pow(17.4, 2) / pow(0.197327, 2);
     par->channel = getenv("CHANNEL") ? getenv("CHANNEL") : "An0n";
-    par->gamma_aa_one = getenv("GAMMA_AA_ONE") != nullptr;
     par->bmin    = 14.2 / 0.197327;
     par->flux_model = getenv("FLUX_MODEL") ? getenv("FLUX_MODEL")
                                            : (par->target == "pA" ? "WS" : "EFF");

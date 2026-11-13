@@ -58,7 +58,7 @@ fi
 
 for y in $Y_VALS; do
 	ytag=$(tag "$y")
-	outfile="$OUTDIR/D0_incl_${frag_tag}_${channel_tag}${g1_tag}_Pb${flux_tag}_y${ytag}.dat"
+	outfile="$OUTDIR/D0_incl_${frag_tag}_${channel_tag}_Pb${flux_tag}_y${ytag}.dat"
 
 	{
 		echo "$header"

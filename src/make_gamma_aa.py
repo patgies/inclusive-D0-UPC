@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import numpy as np
+from scipy.integrate import trapezoid
 
 # Gamma_AA(b) = exp[-sigma_NN T_AA(b)], optical Glauber. sigma_NN: 92 mb at 5.36 TeV (arXiv:2606.05469).
 
@@ -11,8 +12,8 @@ HBARC = 0.197327
 def thickness(R, a, A, s):
     """T_A(s) [fm^-2]: integral of the WS density along z. int d2s T_A = A."""
     z = np.linspace(-40.0, 40.0, 4001)
-    TA = np.array([np.trapezoid(1.0 / (1.0 + np.exp((np.sqrt(z**2 + ss**2) - R) / a)), z) for ss in s])
-    return TA * A / np.trapezoid(2 * np.pi * s * TA, s)
+    TA = np.array([trapezoid(1.0 / (1.0 + np.exp((np.sqrt(z**2 + ss**2) - R) / a)), z) for ss in s])
+    return TA * A / trapezoid(2 * np.pi * s * TA, s)
 
 
 def overlap(s, TA, b_fm):
@@ -24,8 +25,8 @@ def overlap(s, TA, b_fm):
     out = []
     for b in b_fm:
         d = np.sqrt(SP**2 + b**2 - 2 * SP * b * np.cos(PH))
-        inner = 2 * np.trapezoid(np.interp(d, s, TA, right=0.0), ph, axis=1)
-        out.append(np.trapezoid(sp * TAs * inner, sp))
+        inner = 2 * trapezoid(np.interp(d, s, TA, right=0.0), ph, axis=1)
+        out.append(trapezoid(sp * TAs * inner, sp))
     return np.array(out)
 
 

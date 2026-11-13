@@ -339,7 +339,7 @@ public:
 //   b   : between the centres of the two nuclei, b = |r - s|
 //   b_d : dipole impact parameter in the target (the glauber_mve_<b_d> files), not used here
 
-// Sets sqrt(s), the nucleus and the flux settings (TARGET, CHANNEL, FLUX_MODEL, GAMMA_AA_ONE).
+// Sets sqrt(s), the nucleus and the flux settings (TARGET, CHANNEL, FLUX_MODEL).
 void set_collision_parameters(void* par);
 
 // Prepares the flux of par->flux_model:

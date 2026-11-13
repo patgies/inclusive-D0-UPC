@@ -32,7 +32,7 @@ if [[ "$TARGET" == "pA" ]]; then
 	description="p+Pb (TARGET=pA): lead emits, proton target, 8.16 TeV, Gamma_pA [sigma_NN=${SIGMA_NN} mb], no EMD"
 else
 	OUTDIR=${OUTDIR:-$OUTPUT_ROOT/$channel_tag/proton_baseline/$FRAG_TYPE}
-	outname="D0_proton_baseline_incl_${FRAG_TYPE}_${channel_tag}${g1_tag}${flux_tag}"
+	outname="D0_proton_baseline_incl_${FRAG_TYPE}_${channel_tag}${flux_tag}"
 	description="proton target with the Pb+Pb photon flux (TARGET=AA), ${channel_tag} channel"
 fi
 

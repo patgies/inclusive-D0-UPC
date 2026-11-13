@@ -1,10 +1,7 @@
 import glob
 import math
 import os
-import statistics
-import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
-from scipy.integrate import simpson
+from scipy.integrate import simpson, trapezoid
 
 
 pi = math.pi
@@ -138,10 +135,10 @@ def nucleons_beyond(b_max):
     import numpy as np
     s = np.linspace(0.0, 25.0, 2501)
     z = np.linspace(-40.0, 40.0, 4001)
-    TA = np.array([np.trapezoid(1.0 / (1.0 + np.exp((np.sqrt(z**2 + x**2) - R_WS) / A_WS)), z) for x in s])
+    TA = np.array([trapezoid(1.0 / (1.0 + np.exp((np.sqrt(z**2 + x**2) - R_WS) / A_WS)), z) for x in s])
     weight = 2 * pi * s * TA
     inside = s <= b_max * HBARC
-    return A * (1.0 - np.trapezoid(weight[inside], s[inside]) / np.trapezoid(weight, s))
+    return A * (1.0 - trapezoid(weight[inside], s[inside]) / trapezoid(weight, s))
 
 
 def add_edge(nucleus, nucleus_pattern, proton_pattern):
@@ -166,173 +163,3 @@ def add_edge(nucleus, nucleus_pattern, proton_pattern):
 def proton_dir(base, frag, scale="1.0"):
     # proton reference of output/<CHANNEL>/central_values/<frag>/ (scale 1) or of scale_variation/
     return f"{base}/proton_baseline/{frag}" if scale == "1.0" else f"{base}/proton_baseline/factor_{scale}/{frag}"
-
-
-def load_hymnd_band(member_dir_pattern):
-    # Mean and standard deviation over the HymnD members, for each y.
-    member_dirs = sorted(glob.glob(member_dir_pattern))
-    if len(member_dirs) == 0:
-        return {}
-
-    per_member_results = []
-    for member_dir in member_dirs:
-        one_pattern = os.path.join(member_dir, "D0_incl_HymnD_An0n_Pb_y*.dat")
-        per_member_results.append(load_results(one_pattern))
-
-    band = {}
-    for y in per_member_results[0]:
-        pt_values = []
-        for pair in per_member_results[0][y]:
-            pt_values.append(pair[0])
-        pt_values.sort()
-
-        cross_sections_by_pt = []
-        for pt in pt_values:
-            values = []
-            for results in per_member_results:
-                points = dict(results[y])
-                values.append(points[pt])
-            cross_sections_by_pt.append(values)
-
-        means = []
-        stds = []
-        for values in cross_sections_by_pt:
-            means.append(statistics.mean(values))
-            stds.append(statistics.pstdev(values))
-
-        band[y] = (pt_values, means, stds)
-
-    return band
-
-
-def main():
-    results_g1 = load_results("output/An0n/central_values/KniehlKramer/D0_incl_KniehlKramer_An0n_G1_Pb_y*.dat")
-    results_no_g1 = load_results("output/An0n/central_values/KniehlKramer/D0_incl_KniehlKramer_An0n_Pb_y*.dat")
-    results_bcfy = load_results("output/An0n/central_values/BCFY/D0_incl_BCFY_An0n_Pb_y*.dat")
-    results_hymnd = load_results("output/An0n/scale_variation/HymnD/factor_1.0/D0_incl_HymnD_An0n_Pb_y*.dat")
-    hymnd_band = load_hymnd_band("output/An0n/HymnD_band/member_*")
-    if hymnd_band:
-        results_hymnd = None
-    else:
-        results_hymnd = load_results("output/An0n/central_values/HymnD/D0_incl_HymnD_An0n_Pb_y*.dat")
-
-    # One curve per y
-
-    plt.figure(figsize=(7, 5))
-
-    color_cycle = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-
-    # one color per y (only y <= 2 is plotted)
-    y_values_to_plot = []
-    for y in results_g1:
-        if y <= 2.0:
-            y_values_to_plot.append(y)
-    y_values_to_plot.sort()
-
-    colors = {}
-    for i in range(len(y_values_to_plot)):
-        y = y_values_to_plot[i]
-        colors[y] = color_cycle[i % len(color_cycle)]
-
-    for y in sorted(results_g1):
-        if y > 2.0:
-            continue
-        points = sorted(results_g1[y])
-        pt_values = []
-        cross_section_values = []
-        for point in points:
-            pt_values.append(point[0])
-            cross_section_values.append(point[1])
-        plt.plot(pt_values, cross_section_values, color=colors[y], linestyle="-", label="y=" + str(y))
-
-    for y in sorted(results_no_g1):
-        if y > 2.0:
-            continue
-        points = sorted(results_no_g1[y])
-        pt_values = []
-        cross_section_values = []
-        for point in points:
-            pt_values.append(point[0])
-            cross_section_values.append(point[1])
-        plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle="--")
-
-    for y in sorted(results_bcfy):
-        if y > 2.0:
-            continue
-        points = sorted(results_bcfy[y])
-        pt_values = []
-        cross_section_values = []
-        for point in points:
-            pt_values.append(point[0])
-            cross_section_values.append(point[1])
-        plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle=":")
-
-    for y in sorted(results_hymnd):
-        if y > 2.0:
-            continue
-        points = sorted(results_hymnd[y])
-        pt_values = []
-        cross_section_values = []
-        for point in points:
-            pt_values.append(point[0])
-            cross_section_values.append(point[1])
-        plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle=(0, (3, 1, 1, 1)))
-
-    if hymnd_band:
-        for y in sorted(hymnd_band):
-            if y > 2.0:
-                continue
-            pt_values, means, stds = hymnd_band[y]
-            color = colors.get(y)
-            lower = []
-            upper = []
-            for i in range(len(means)):
-                mean = means[i]
-                std = stds[i]
-                lower_value = mean - std
-                if lower_value < 1e-12:
-                    lower_value = 1e-12
-                lower.append(lower_value)
-                upper.append(mean + std)
-            plt.fill_between(pt_values, lower, upper, color=color, alpha=0.2, linewidth=0)
-            plt.plot(pt_values, means, color=color, linestyle="-.")
-    else:
-        for y in sorted(results_hymnd):
-            if y > 2.0:
-                continue
-            points = sorted(results_hymnd[y])
-            pt_values = []
-            cross_section_values = []
-            for point in points:
-                pt_values.append(point[0])
-                cross_section_values.append(point[1])
-            plt.plot(pt_values, cross_section_values, color=colors.get(y), linestyle="-.")
-
-    plt.yscale("log")
-    plt.xlabel(r"$p_{D^0}$ [GeV]")
-    plt.ylabel(r"$d\sigma/dy\,dp_T$ [mb/GeV]")
-    plt.title("Inclusive $D^0$ photoproduction, Pb+Pb UPC")
-
-    y_legend = plt.legend(loc="upper right")
-    plt.gca().add_artist(y_legend)
-
-    if hymnd_band:
-        hymnd_legend_text = "HymnD (mean +/- std over replicas)"
-    else:
-        hymnd_legend_text = "HymnD (member 0, no errors)"
-
-    style_handles = [
-        Line2D([0], [0], color="black", linestyle="-", label="KniehlKramer, G1"),
-        Line2D([0], [0], color="black", linestyle="--", label="KniehlKramer, no G1"),
-        Line2D([0], [0], color="black", linestyle=":", label="BCFY"),
-        Line2D([0], [0], color="black", linestyle="-.", label=hymnd_legend_text),
-        Line2D([0], [0], color="black", linestyle=(0, (3, 1, 1, 1)), label="HymnD"),
-    ]
-    plt.legend(handles=style_handles, loc="lower left")
-
-    plt.tight_layout()
-    plt.savefig("plots/D0_incl_dsigma_dy_dpt_PbPb_g1.png", dpi=150)
-
-
-if __name__ == "__main__":
-    main()
