@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cross_section import (read_rapidity, read_data_file, group_by_pt, integrate_over_b,
                            load_results, add_edge, proton_dir, GEVSQR_TO_MB)
-from cms_comparison import load_cms_data   # also moves to the repo root and sets the plot style
+from cms_comparison import load_cms_data, CMS_PHOTON_DIRECTIONS   # also moves to the repo root and sets the plot style
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from PbPb_bins import bin_averages, FRAGS, FIG9_PANELS, BAND_HANDLE, style_panel, draw_cms, finish
@@ -160,7 +160,7 @@ def draw(frag, filename, cms):
     print(f"{label}: diffractive (0n0n) / inclusive (An0n), central scale")
 
     for ax, (pt_lo, pt_hi, y_edges, show_cms) in zip(axes.flat, FIG9_PANELS):
-        incl, diff, sub = bands(frag, pt_lo, pt_hi, y_edges)
+        incl, diff, sub = ([CMS_PHOTON_DIRECTIONS * v for v in curve] for curve in bands(frag, pt_lo, pt_hi, y_edges))
         for (central, low, high), (_, color, linestyle) in zip((incl, sub), CURVES):
             # one horizontal line per y bin, without the vertical lines joining the bins
             ax.hlines(central, y_edges[:-1], y_edges[1:], color=color, linestyle=linestyle, lw=3)

@@ -21,7 +21,7 @@ from matplotlib.ticker import MultipleLocator, ScalarFormatter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cross_section import load_results, add_edge, proton_dir
-from cms_comparison import load_cms_data   # also moves to the repo root and sets the plot style
+from cms_comparison import load_cms_data, CMS_PHOTON_DIRECTIONS   # also moves to the repo root and sets the plot style
 
 CHANNEL = os.environ.get("CHANNEL", "An0n")
 # FLUX=Starlight reads output/<CHANNEL>_Starlight/ (runs with FLUX_MODEL=TABLE). Default: the EFF flux.
@@ -192,6 +192,8 @@ def draw(panels, filename, cms=None, frag_runs=None, sublabel=PANEL_LABEL, secon
         for frag, runs in frag_runs.items():
             _, color, linestyle = FRAGS[frag]
             central, low, high = band(runs, pt_lo, pt_hi, y_edges)
+            if cms is not None:
+                central, low, high = (CMS_PHOTON_DIRECTIONS * v for v in (central, low, high))
             # one horizontal line per y bin, without the vertical lines joining the bins
             ax.hlines(central, y_edges[:-1], y_edges[1:], color=color, linestyle=linestyle, lw=3)
             for y_lo, y_hi, lo, hi in zip(y_edges[:-1], y_edges[1:], low, high):

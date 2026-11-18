@@ -20,6 +20,9 @@ from cross_section import (
     pi,
 )
 
+# CMS measures 0nXn + Xn0n: the photon from either nucleus. The predictions are for one direction.
+CMS_PHOTON_DIRECTIONS = 2
+
 # Paths are relative to the repo root.
 os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
@@ -169,7 +172,7 @@ def compute_theory_points(pattern):
                 cs_list.append(per_y[y])
 
             y_integral = simpson(cs_list, x=y_list)
-            avg = y_integral / (y_hi - y_lo) / (pt_hi - pt_lo)
+            avg = CMS_PHOTON_DIRECTIONS * y_integral / (y_hi - y_lo) / (pt_hi - pt_lo)
             y_points.append((y_lo, y_hi, avg))
 
         out.append((pt_lo, pt_hi, y_points))
