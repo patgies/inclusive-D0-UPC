@@ -19,10 +19,11 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cross_section import (read_rapidity, read_data_file, group_by_pt, integrate_over_b,
                            load_results, add_edge, proton_dir, GEVSQR_TO_MB)
-from cms_comparison import load_cms_data, CMS_PHOTON_DIRECTIONS   # also moves to the repo root and sets the plot style
+from cms_comparison import CMS_PHOTON_DIRECTIONS   # also moves to the repo root and sets the plot style
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
-from PbPb_bins import bin_averages, FRAGS, FIG9_PANELS, BAND_HANDLE, style_panel, draw_cms, finish
+from PbPb_bins import (bin_averages, FRAGS, FIG9_PANELS, BAND_HANDLE, style_panel, draw_cms, finish, load_cms,
+                       cms_rows, pas_legend)
 
 # FLUX=Starlight: inclusive runs of output/An0n_Starlight/ (FLUX_MODEL=TABLE) and diffractive runs with
 # the STARlight flux, copied to input/diffractive/0n0n_Starlight/. Default: the EFF flux.
@@ -155,12 +156,14 @@ CURVES = [
 
 
 def draw(frag, filename, cms):
-    label = FRAGS[frag][0]
+    label = {"KniehlKramer": "Kniehl-Kramer"}.get(frag, FRAGS[frag][0]) + " FF"
     fig, axes = plt.subplots(2, 2, figsize=(16, 11.34), sharex=True)
     print(f"{label}: diffractive (0n0n) / inclusive (An0n), central scale")
 
-    for ax, (pt_lo, pt_hi, y_edges, show_cms) in zip(axes.flat, FIG9_PANELS):
-        incl, diff, sub = ([CMS_PHOTON_DIRECTIONS * v for v in curve] for curve in bands(frag, pt_lo, pt_hi, y_edges))
+    for ax, (pt_lo, pt_hi, y_edges, source) in zip(axes.flat, FIG9_PANELS):
+        rows = cms_rows(cms, source, pt_lo, pt_hi)
+        factor = CMS_PHOTON_DIRECTIONS if rows else 1
+        incl, diff, sub = ([factor * v for v in curve] for curve in bands(frag, pt_lo, pt_hi, y_edges))
         for (central, low, high), (_, color, linestyle) in zip((incl, sub), CURVES):
             # one horizontal line per y bin, without the vertical lines joining the bins
             ax.hlines(central, y_edges[:-1], y_edges[1:], color=color, linestyle=linestyle, lw=3)
@@ -169,22 +172,26 @@ def draw(frag, filename, cms):
         top = np.nanmax(incl[2])
         ratios = "  ".join(f"{r:.3f}" for r in diff[0] / incl[0])
         print(f"   {pt_lo:g} < pT < {pt_hi:g} GeV, y bins {y_edges}: {ratios}")
-        if show_cms and (pt_lo, pt_hi) in cms:
-            top = max(top, draw_cms(ax, cms[(pt_lo, pt_hi)]))
+        if rows:
+            top = max(top, draw_cms(ax, rows, open_marker=source == "PAS"))
         first = ax is axes.flat[0]
-        style_panel(ax, pt_lo, pt_hi, -2.0, 2.0, top, legend_entries=4 if first else 0,
-                    sublabel=(f"{label}\n{FLUX_NAME}" if FLUX else label) if first else None)
+        second = ax is axes.flat[1]
+        style_panel(ax, pt_lo, pt_hi, -2.0, 2.0, top, legend_entries=(5 if FLUX else 4) if first else 0,
+                    sublabel=(f"{label}\n{FLUX_NAME}" if FLUX else label) if first else None, sublabel_y=0.81,
+                    sublabel_size=26)
+        if rows and source == "PAS":
+            pas_legend(ax, text_lines=0)
 
     handles = [Line2D([0], [0], color=color, linestyle=linestyle, lw=3, label=name)
                for name, color, linestyle in CURVES]
     # the band of the difference also has the mu_R variation of the diffractive part (alpha_s)
-    handles.append(Patch(facecolor="0.3", alpha=0.25, edgecolor="none", label=r"$\mu_F, \mu_R \in [0.5, 2]\, m_T$"))
+    handles.append(Patch(facecolor="0.3", alpha=0.25, edgecolor="none", label=r"$\mu_F, \mu_R \in [0.5, 2]\, m_T^D$"))
     handles.append(Line2D([0], [0], color="black", marker="o", linestyle="none", markersize=9, label="CMS"))
-    finish(fig, axes, handles, filename, labelspacing=0.5)
+    finish(fig, axes, handles, filename, labelspacing=0.5, legend_top=0.81 if FLUX else 0.93)
 
 
 def main():
-    cms = load_cms_data()
+    cms = load_cms()
     only = os.environ.get("FRAG_TYPE", "")
     if only and only not in FRAGS:
         sys.exit(f"Unknown FRAG_TYPE '{only}'. Expected one of: {', '.join(FRAGS)}.")

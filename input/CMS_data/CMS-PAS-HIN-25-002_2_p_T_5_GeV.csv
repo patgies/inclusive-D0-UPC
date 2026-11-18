@@ -1,0 +1,8 @@
+# CMS-PAS-HIN-25-002 (preliminary, not in HEPData): D0 cross section d2sigma/dydpT for 2 < pT < 5 GeV,
+# (D0 + D0bar)/2, Xn0n + 0nXn (y -> -y), PbPb 5.36 TeV: both photon directions, 0nXn reflected in rapidity.
+# Values taken from the vector graphics of Figure 8 of the note (https://cds.cern.ch/record/2930669).
+$y$,$y$ LOW,$y$ HIGH,d$^{2}\sigma$/dydp$_{\mathrm{T}}$ (mb/GeV),Stat. +,Stat. -,Syst. +,Syst. -
+-1.5,-2.0,-1.0,3.106,0.393,-0.393,0.894,-0.894
+-0.5,-1.0,0.0,2.628,0.212,-0.212,0.687,-0.687
+0.5,0.0,1.0,1.284,0.130,-0.130,0.422,-0.422
+1.5,1.0,2.0,0.509,0.119,-0.119,0.226,-0.226

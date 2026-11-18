@@ -21,7 +21,7 @@ from matplotlib.ticker import MultipleLocator, ScalarFormatter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cross_section import load_results, add_edge, proton_dir
-from cms_comparison import load_cms_data, CMS_PHOTON_DIRECTIONS   # also moves to the repo root and sets the plot style
+from cms_comparison import load_cms_data, load_cms_pas_data, CMS_PHOTON_DIRECTIONS   # also moves to the repo root and sets the plot style
 
 CHANNEL = os.environ.get("CHANNEL", "An0n")
 # FLUX=Starlight reads output/<CHANNEL>_Starlight/ (runs with FLUX_MODEL=TABLE). Default: the EFF flux.
@@ -40,22 +40,23 @@ FRAGS = {
 }
 SCALE_FACTORS = ["0.5", "2.0"]
 # legend entry of the scale-variation bands (as in diffractive-D0-UPC)
-BAND_HANDLE = Patch(facecolor="0.3", alpha=0.25, edgecolor="none", label=r"$\mu_F \in [0.5, 2]\, m_T$")
+BAND_HANDLE = Patch(facecolor="0.3", alpha=0.25, edgecolor="none", label=r"$\mu_F \in [0.5, 2]\, m_T^D$")
 
-# Panels (pT bin, y bin edges, draw the CMS data) of the two figures.
-# Fig. 9 of arXiv:2606.05469: the CMS bins. CMS has one y bin for 2 < pT < 5 GeV.
+# Panels (pT bin, y bin edges, CMS data set) of the two figures.
+# Fig. 9 of arXiv:2606.05469: the CMS bins. "HEPData": 0nXn + Xn0n, one y bin for 2 < pT < 5 GeV.
+# "PAS": CMS-PAS-HIN-25-002, 2 < pT < 5 GeV in four y bins, also 0nXn + Xn0n.
 Y_EDGES = [-2.0, -1.0, 0.0, 1.0, 2.0]
 FIG9_PANELS = [
-    (2.0, 5.0, [-1.0, 1.0], True),
-    (2.0, 5.0, Y_EDGES, False),
-    (5.0, 8.0, Y_EDGES, True),
-    (8.0, 12.0, Y_EDGES, True),
+    (2.0, 5.0, [-1.0, 1.0], "HEPData"),
+    (2.0, 5.0, Y_EDGES, "PAS"),
+    (5.0, 8.0, Y_EDGES, "HEPData"),
+    (8.0, 12.0, Y_EDGES, "HEPData"),
 ]
 # Fixed upper limit of the vertical axis of a pT bin. The others are automatic.
 Y_AXIS_MAX = {}   # e.g. {(2.0, 5.0): 8.0}
 # Narrow pT bins, y from -3 to 3.
 WIDE_Y_EDGES = [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0]
-NARROW_PANELS = [(lo, hi, WIDE_Y_EDGES, False)
+NARROW_PANELS = [(lo, hi, WIDE_Y_EDGES, None)
                for lo, hi in [(0.0, 1.0), (1.0, 2.0), (2.0, 3.0), (3.0, 4.0), (6.0, 7.0), (10.0, 11.0)]]
 
 
@@ -111,7 +112,7 @@ class TrimmedFormatter(ScalarFormatter):
         self.format = re.sub(r"%1\.\d+f", "%g", self.format)
 
 
-def style_panel(ax, pt_lo, pt_hi, y_min, y_max, top, legend_entries=0, sublabel=None):
+def style_panel(ax, pt_lo, pt_hi, y_min, y_max, top, legend_entries=0, sublabel=None, sublabel_y=0.835, sublabel_size=30):
     # Axes, ticks and pT label of one panel (style of diffractive-D0-UPC).
     ax.set_xlim(y_min, y_max)
     # more room above the data in the panel with the legend
@@ -134,26 +135,45 @@ def style_panel(ax, pt_lo, pt_hi, y_min, y_max, top, legend_entries=0, sublabel=
             ha="right", va="top", fontsize=30, bbox=dict(facecolor="white", edgecolor="none", pad=3),
             zorder=10)
     if sublabel:
-        ax.text(0.94, 0.81, sublabel, transform=ax.transAxes, ha="right", va="top", fontsize=30,
+        ax.text(0.94, sublabel_y, sublabel, transform=ax.transAxes, ha="right", va="top", fontsize=sublabel_size,
                 linespacing=1.5, bbox=dict(facecolor="white", edgecolor="none", pad=3), zorder=10)
 
 
-def draw_cms(ax, rows):
+def load_cms():
+    # {data set: {(pT_lo, pT_hi): rows}} of the panels
+    return {"HEPData": load_cms_data(), "PAS": load_cms_pas_data()}
+
+
+def cms_rows(cms, source, pt_lo, pt_hi):
+    return (cms or {}).get(source, {}).get((pt_lo, pt_hi)) if source else None
+
+
+PAS_HANDLE = Line2D([0], [0], color="black", marker="o", markerfacecolor="white", linestyle="none",
+                    markersize=9, label="CMS prel.")
+
+
+def pas_legend(ax, text_lines=1):
+    # legend of the PAS points in their own panel, on the right, under the pT label and text_lines more lines
+    ax.legend(handles=[PAS_HANDLE], loc="upper right", bbox_to_anchor=(0.97, 0.85 - 0.095 * text_lines), fontsize=28,
+              frameon=False, handlelength=1.0, handletextpad=0.4)
+
+
+def draw_cms(ax, rows, open_marker=False):
     # CMS points with the statistical error, and the systematic error as a box. Returns the highest value.
     top = 0.0
     for y_lo, y_hi, value, stat, syst in rows:
         ax.errorbar(0.5 * (y_lo + y_hi), value, yerr=stat, fmt="o", color="black", markersize=9,
-                    capsize=0, zorder=5)
+                    markerfacecolor="white" if open_marker else "black", capsize=0, zorder=5)
         ax.fill_between([y_lo, y_hi], value - syst, value + syst, facecolor="none",
                         edgecolor="black", linewidth=1.2, zorder=4)
         top = max(top, value + syst)
     return top
 
 
-def finish(fig, axes, handles, filename, legend_title=None, labelspacing=0.55):
+def finish(fig, axes, handles, filename, legend_title=None, labelspacing=0.55, legend_top=0.93):
     # Legend in the first panel, axis titles, and save.
     # legend in a white box, a little below the top; the pT and FF labels are drawn on top of the box
-    legend = axes.flat[0].legend(handles=handles, loc="upper left", bbox_to_anchor=(0.04, 0.93), fontsize=28,
+    legend = axes.flat[0].legend(handles=handles, loc="upper left", bbox_to_anchor=(0.04, legend_top), fontsize=28,
                                  frameon=True, facecolor="white", edgecolor="none", framealpha=1.0,
                                  title=legend_title, title_fontsize=28,
                                  labelspacing=labelspacing, borderpad=0.15, borderaxespad=0.25, handlelength=1.3,
@@ -184,38 +204,41 @@ def draw(panels, filename, cms=None, frag_runs=None, sublabel=PANEL_LABEL, secon
     fig, axes = plt.subplots(nrows, 2, figsize=(16, 5.67 * nrows), sharex=True, squeeze=False)
     y_min = min(panel[2][0] for panel in panels)
     y_max = max(panel[2][-1] for panel in panels)
-    has_cms = cms is not None and any(panel[3] for panel in panels)
-    n_legend = len(frag_runs) + 1 + (1 if has_cms else 0)   # + the band entry
+    sources = {panel[3] for panel in panels if cms_rows(cms, panel[3], panel[0], panel[1])}
+    n_legend = len(frag_runs) + 1 + ("HEPData" in sources)   # + the band entry
 
-    for ax, (pt_lo, pt_hi, y_edges, show_cms) in zip(axes.flat, panels):
+    for ax, (pt_lo, pt_hi, y_edges, source) in zip(axes.flat, panels):
+        rows = cms_rows(cms, source, pt_lo, pt_hi)
+        factor = CMS_PHOTON_DIRECTIONS if rows else 1
         top = 0.0
         for frag, runs in frag_runs.items():
             _, color, linestyle = FRAGS[frag]
             central, low, high = band(runs, pt_lo, pt_hi, y_edges)
-            if cms is not None:
-                central, low, high = (CMS_PHOTON_DIRECTIONS * v for v in (central, low, high))
+            central, low, high = (factor * v for v in (central, low, high))
             # one horizontal line per y bin, without the vertical lines joining the bins
             ax.hlines(central, y_edges[:-1], y_edges[1:], color=color, linestyle=linestyle, lw=3)
             for y_lo, y_hi, lo, hi in zip(y_edges[:-1], y_edges[1:], low, high):
                 ax.fill_between([y_lo, y_hi], lo, hi, color=color, alpha=0.25, linewidth=0)
             top = max(top, np.nanmax(high))
-        if show_cms and cms is not None and (pt_lo, pt_hi) in cms:
-            top = max(top, draw_cms(ax, cms[(pt_lo, pt_hi)]))
+        if rows:
+            top = max(top, draw_cms(ax, rows, open_marker=source == "PAS"))
         first = ax is axes.flat[0]
         second = ax is axes.flat[1]
         style_panel(ax, pt_lo, pt_hi, y_min, y_max, top, legend_entries=n_legend if first else 0,
                     sublabel=sublabel if first else second_panel_text if second else None)
+        if rows and source == "PAS":
+            pas_legend(ax, text_lines=1 if second_panel_text else 0)
 
     handles = [Line2D([0], [0], color=color, linestyle=linestyle, lw=3, label=label)
                for frag, (label, color, linestyle) in FRAGS.items() if frag in frag_runs]
     handles.append(BAND_HANDLE)
-    if has_cms:
+    if "HEPData" in sources:
         handles.append(Line2D([0], [0], color="black", marker="o", linestyle="none", markersize=9, label="CMS"))
     finish(fig, axes, handles, filename)
 
 
 def main():
-    draw(FIG9_PANELS, f"plots/D0_incl_CMS_{CHANNEL}{SUFFIX}.pdf", cms=load_cms_data())
+    draw(FIG9_PANELS, f"plots/D0_incl_CMS_{CHANNEL}{SUFFIX}.pdf", cms=load_cms())
     draw(NARROW_PANELS, f"plots/D0_incl_bins_{CHANNEL}{SUFFIX}.pdf")
 
 

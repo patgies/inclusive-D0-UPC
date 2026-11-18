@@ -55,55 +55,33 @@ PT_BINS_Y_BINS = [
 ]
 
 
+def read_cms_csv(filename):
+    # Rows (y_lo, y_hi, value, stat, syst) of a CMS csv file in the HEPData format.
+    with open(filename) as f:
+        good_lines = [line for line in f if not line.startswith("#") and line.strip()]
+    rows = []
+    for row in list(csv.reader(good_lines))[1:]:   # first line: header
+        y_lo, y_hi, value = float(row[1]), float(row[2]), float(row[3])
+        stat = 0.5 * (float(row[4]) - float(row[5]))
+        syst = 0.5 * (float(row[6]) - float(row[7]))
+        rows.append((y_lo, y_hi, value, stat, syst))
+    return sorted(rows)
+
+
 def load_cms_data():
     # Reads the 3 CMS csv files into one dictionary.
     data = {}
     pattern = "input/CMS_data/HEPData-ins2968597-v1-D^0_cross_section_for_*_GeV_in_PbPb_UPCs.csv"
-    file_list = glob.glob(pattern)
-
-    for filename in file_list:
+    for filename in glob.glob(pattern):
         # The pT bin is in the file name.
         match = re.search(r"for_(\d+)_+p_T_+(\d+)_GeV", filename)
-        pt_lo = float(match.group(1))
-        pt_hi = float(match.group(2))
-
-        f = open(filename)
-        all_lines = f.readlines()
-        f.close()
-
-        # Skip comments and empty lines.
-        good_lines = []
-        for line in all_lines:
-            if line.startswith("#"):
-                continue
-            if line.strip() == "":
-                continue
-            good_lines.append(line)
-
-        reader = csv.reader(good_lines)
-        rows = []
-        first_line = True
-        for row in reader:
-            if first_line:
-                # header line
-                first_line = False
-                continue
-            y = float(row[0])
-            y_lo = float(row[1])
-            y_hi = float(row[2])
-            value = float(row[3])
-            stat_p = float(row[4])
-            stat_m = float(row[5])
-            syst_p = float(row[6])
-            syst_m = float(row[7])
-            stat = 0.5 * (stat_p - stat_m)
-            syst = 0.5 * (syst_p - syst_m)
-            rows.append((y_lo, y_hi, value, stat, syst))
-
-        rows.sort()
-        data[(pt_lo, pt_hi)] = rows
-
+        data[(float(match.group(1)), float(match.group(2)))] = read_cms_csv(filename)
     return data
+
+
+def load_cms_pas_data():
+    # CMS-PAS-HIN-25-002: 2 < pT < 5 GeV in four y bins, Xn0n + 0nXn as the HEPData files.
+    return {(2.0, 5.0): read_cms_csv("input/CMS_data/CMS-PAS-HIN-25-002_2_p_T_5_GeV.csv")}
 
 
 def interpolate(x, x_list, y_list):
